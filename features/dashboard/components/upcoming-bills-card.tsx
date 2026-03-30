@@ -2,8 +2,9 @@ import { CalendarClock, CircleDashed } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/money-value";
 import type { InvoiceItem } from "@/types/app";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatDate } from "@/utils/format";
 
 export function UpcomingBillsCard({ invoices }: { invoices: InvoiceItem[] }) {
   return (
@@ -25,7 +26,7 @@ export function UpcomingBillsCard({ invoices }: { invoices: InvoiceItem[] }) {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-semibold">{formatCurrency(invoice.amount)}</p>
+              <MoneyValue value={invoice.amount} className="font-semibold" />
               <Badge variant={invoice.status === "paid" ? "success" : "secondary"}>
                 {invoice.status}
               </Badge>

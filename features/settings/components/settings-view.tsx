@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Download, FileArchive, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,10 +19,31 @@ import { deleteCategory, upsertCategory } from "@/features/categories/server/act
 import { categorySchema, type CategoryInput } from "@/features/categories/schemas/category-schema";
 import { exportBackupAction, generateMonthlyReportAction } from "@/features/settings/server/actions";
 import type { CategoryOption, UserProfile } from "@/types/app";
+import { cn } from "@/utils/cn";
+
+const CATEGORY_COLOR_PRESETS = [
+  { name: "Slate", value: "#64748b", className: "bg-slate-500" },
+  { name: "Gray", value: "#6b7280", className: "bg-gray-500" },
+  { name: "Red", value: "#ef4444", className: "bg-red-500" },
+  { name: "Orange", value: "#f97316", className: "bg-orange-500" },
+  { name: "Amber", value: "#f59e0b", className: "bg-amber-500" },
+  { name: "Yellow", value: "#eab308", className: "bg-yellow-500" },
+  { name: "Lime", value: "#84cc16", className: "bg-lime-500" },
+  { name: "Green", value: "#22c55e", className: "bg-green-500" },
+  { name: "Emerald", value: "#10b981", className: "bg-emerald-500" },
+  { name: "Teal", value: "#14b8a6", className: "bg-teal-500" },
+  { name: "Cyan", value: "#06b6d4", className: "bg-cyan-500" },
+  { name: "Sky", value: "#0ea5e9", className: "bg-sky-500" },
+  { name: "Blue", value: "#3b82f6", className: "bg-blue-500" },
+  { name: "Indigo", value: "#6366f1", className: "bg-indigo-500" },
+  { name: "Violet", value: "#8b5cf6", className: "bg-violet-500" },
+  { name: "Pink", value: "#ec4899", className: "bg-pink-500" }
+] as const;
 
 export function SettingsView({ user, categories }: { user: UserProfile; categories: CategoryOption[] }) {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
@@ -33,6 +56,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
 
   const resetCategoryForm = () => {
     setEditingId(null);
+    setCategoryDialogOpen(false);
     form.reset({
       name: "",
       type: "expense",
@@ -67,6 +91,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
 
   const startEdit = (category: CategoryOption) => {
     setEditingId(category.id);
+    setCategoryDialogOpen(true);
     form.reset({
       id: category.id,
       name: category.name,
@@ -93,6 +118,17 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
     });
   };
 
+  const startCreate = () => {
+    setEditingId(null);
+    form.reset({
+      name: "",
+      type: "expense",
+      color: "#0f766e",
+      icon: undefined
+    });
+    setCategoryDialogOpen(true);
+  };
+
   const exportBackup = () => {
     startTransition(async () => {
       const payload = await exportBackupAction();
@@ -116,7 +152,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Settings" title="Household preferences and utilities" description="Manage profile, categories, reporting, and backup actions from one place." />
+      <PageHeader eyebrow="Settings" title="⚙️ Household preferences and utilities" description="Manage profile, categories, reporting, and backup actions from one place." />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
@@ -156,37 +192,19 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>{editingId ? "Edit category" : "Category master data"}</CardTitle>
+            <CardTitle>Category master data</CardTitle>
             <CardDescription>Maintain reusable categories used by transactions, budgets, reports, and charts.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form className="space-y-4" onSubmit={submit}>
-              <input type="hidden" {...form.register("id")} />
-              <div className="space-y-2"><Label>Name</Label><Input {...form.register("name")} /></div>
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={form.watch("type")} onValueChange={(value) => form.setValue("type", value as "income" | "expense")}>
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2"><Label>Color</Label><Input {...form.register("color")} /></div>
-              <div className="flex gap-3">
-                <Button className="flex-1" type="submit" disabled={isPending}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? "Update category" : "Save category"}
-                </Button>
-                {editingId ? (
-                  <Button type="button" variant="outline" onClick={resetCategoryForm}>
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
-                  </Button>
-                ) : null}
-              </div>
-            </form>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
+              <p className="text-sm text-muted-foreground">
+                Add or edit category master data in a focused modal so the settings page stays cleaner on desktop and mobile.
+              </p>
+            </div>
+            <Button className="w-full" onClick={startCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add category
+            </Button>
           </CardContent>
         </Card>
         <Card>
@@ -228,6 +246,84 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
           </CardContent>
         </Card>
       </div>
+      <Dialog open={categoryDialogOpen} onOpenChange={(open) => (!open ? resetCategoryForm() : setCategoryDialogOpen(true))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit category" : "Add category"}</DialogTitle>
+            <DialogDescription>Manage category master data used across transactions, budgets, reports, and charts.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={submit}>
+            <input type="hidden" {...form.register("id")} />
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input {...form.register("name")} placeholder="Example: Groceries" />
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={form.watch("type")} onValueChange={(value) => form.setValue("type", value as "income" | "expense")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">Expense</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-3">
+              <Label>Color palette</Label>
+              <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+                {CATEGORY_COLOR_PRESETS.map((preset) => {
+                  const selected = form.watch("color") === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      title={preset.name}
+                      className={cn(
+                        "flex h-11 items-center justify-center rounded-2xl border transition",
+                        selected ? "border-foreground ring-2 ring-primary/20" : "border-border hover:border-foreground/30"
+                      )}
+                      onClick={() => form.setValue("color", preset.value, { shouldDirty: true, shouldValidate: true })}
+                    >
+                      <span className={cn("h-6 w-6 rounded-full", preset.className)} />
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category-color">Custom hex color</Label>
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-border bg-muted/20 p-3">
+                    <HexColorPicker
+                      color={form.watch("color") || "#0f766e"}
+                      onChange={(value) => form.setValue("color", value, { shouldDirty: true, shouldValidate: true })}
+                      className="!h-[180px] !w-full"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Input id="category-color" {...form.register("color")} placeholder="#0f766e" />
+                    <span
+                      className="h-10 w-10 shrink-0 rounded-2xl border border-border"
+                      style={{ backgroundColor: form.watch("color") || "#0f766e" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={resetCategoryForm}>
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                <Plus className="mr-2 h-4 w-4" />
+                {editingId ? "Update category" : "Save category"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

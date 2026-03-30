@@ -8,13 +8,18 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/money-value";
 import type { MonthlyReportRecord } from "@/types/app";
-import { formatCurrency, formatMonthLabel } from "@/utils/format";
+import { formatMonthLabel } from "@/utils/format";
 import { generateMonthlyReportAction } from "@/features/settings/server/actions";
 
 export function ReportsView({ initialReport, month }: { initialReport: MonthlyReportRecord | null; month: string }) {
   const [report, setReport] = useState(initialReport);
   const [isPending, startTransition] = useTransition();
+
+  const debts = report?.summary.debts ?? [];
+  const investments = report?.summary.investments ?? [];
+  const subscriptions = report?.summary.subscriptions ?? [];
 
   const generateCurrentMonth = () => {
     startTransition(async () => {
@@ -38,7 +43,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
     <div className="space-y-8">
       <PageHeader
         eyebrow="Reports"
-        title="AI monthly finance reports"
+        title="🤖 AI monthly finance reports"
         description={`Generate and review monthly household report narratives for ${formatMonthLabel(`${month}-01`)}.`}
         actions={
           <Button onClick={generateCurrentMonth} disabled={isPending}>
@@ -56,7 +61,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                   <div className="rounded-xl bg-primary/10 p-2 text-primary"><Wallet className="h-5 w-5" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Income</p>
-                    <p className="text-xl font-semibold">{formatCurrency(report.summary.income)}</p>
+                    <div className="text-xl font-semibold"><MoneyValue value={report.summary.income} /></div>
                   </div>
                 </CardContent>
               </Card>
@@ -65,7 +70,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                   <div className="rounded-xl bg-warning/15 p-2 text-warning"><TrendingDown className="h-5 w-5" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Expense</p>
-                    <p className="text-xl font-semibold">{formatCurrency(report.summary.expense)}</p>
+                    <div className="text-xl font-semibold"><MoneyValue value={report.summary.expense} /></div>
                   </div>
                 </CardContent>
               </Card>
@@ -74,8 +79,43 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                   <div className="rounded-xl bg-success/15 p-2 text-success"><TrendingUp className="h-5 w-5" /></div>
                   <div>
                     <p className="text-sm text-muted-foreground">Net</p>
-                    <p className="text-xl font-semibold">{formatCurrency(report.summary.net)}</p>
+                    <div className="text-xl font-semibold"><MoneyValue value={report.summary.net} /></div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-4">
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-sm text-muted-foreground">Open debts</p>
+                  <p className="mt-1 text-xl font-semibold">
+                    {debts.filter((item) => item.direction === "debt" && item.status === "open").length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-sm text-muted-foreground">Open receivables</p>
+                  <p className="mt-1 text-xl font-semibold">
+                    {debts.filter((item) => item.direction === "receivable" && item.status === "open").length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-sm text-muted-foreground">Active investments</p>
+                  <p className="mt-1 text-xl font-semibold">
+                    {investments.filter((item) => item.status === "active").length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-sm text-muted-foreground">Unpaid subscriptions</p>
+                  <p className="mt-1 text-xl font-semibold">
+                    {subscriptions.filter((item) => item.cycle.status !== "paid").length}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -127,6 +167,45 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                       {(report.summary.aiReport?.actions ?? []).map((item, index) => (
                         <div key={`${item}-${index}`} className="rounded-xl bg-muted/35 p-3">{item}</div>
                       ))}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-3">
+                  <Card>
+                    <CardHeader><CardTitle className="text-base">Debt / Receivables</CardTitle></CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                      {debts.length ? debts.map((item) => (
+                        <div key={item.id} className="rounded-xl bg-muted/35 p-3">
+                          <p className="font-medium text-foreground">{item.name}</p>
+                          <p>{item.direction} · {item.counterparty}</p>
+                          <p>Remaining <MoneyValue value={item.remainingAmount} /></p>
+                        </div>
+                      )) : <div className="rounded-xl bg-muted/35 p-3">No debt or receivable records.</div>}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-base">Investments</CardTitle></CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                      {investments.length ? investments.map((item) => (
+                        <div key={item.id} className="rounded-xl bg-muted/35 p-3">
+                          <p className="font-medium text-foreground">{item.name}</p>
+                          <p>{item.type}{item.platform ? ` · ${item.platform}` : ""}</p>
+                          <p>Value <MoneyValue value={item.currentValue} /></p>
+                        </div>
+                      )) : <div className="rounded-xl bg-muted/35 p-3">No investment records.</div>}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-base">Subscriptions</CardTitle></CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                      {subscriptions.length ? subscriptions.map((item) => (
+                        <div key={item.id} className="rounded-xl bg-muted/35 p-3">
+                          <p className="font-medium text-foreground">{item.name}</p>
+                          <p>{item.vendor} · {item.cycle.status}</p>
+                          <p><MoneyValue value={item.amount} /> due {new Date(item.cycle.dueDate).toLocaleDateString("id-ID")}</p>
+                        </div>
+                      )) : <div className="rounded-xl bg-muted/35 p-3">No subscription records.</div>}
                     </CardContent>
                   </Card>
                 </div>

@@ -12,7 +12,7 @@ export function MetricCard({
   trend = "up"
 }: {
   title: string;
-  value: string;
+  value: React.ReactNode;
   caption: string;
   trend?: "up" | "down";
 }) {
@@ -34,7 +34,7 @@ export function MetricCard({
             <TrendIcon className="h-3.5 w-3.5" />
           </div>
         </div>
-        <p className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{value}</p>
+        <div className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{value}</div>
         <p className="mt-1 text-[12px] text-muted-foreground">{caption}</p>
       </div>
     </motion.div>

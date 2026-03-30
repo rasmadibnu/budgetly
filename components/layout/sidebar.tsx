@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ReceiptText, Target, WalletCards, BellRing, Settings, FileText } from "lucide-react";
+import { LayoutDashboard, ReceiptText, Target, WalletCards, FileBadge2, Settings, FileText, HandCoins, TrendingUp, Repeat2, UserCircle2 } from "lucide-react";
 
 import { Logo } from "@/components/layout/logo";
 import { cn } from "@/utils/cn";
@@ -12,11 +12,15 @@ export const navItems = [
   { href: "/transactions", label: "Transactions", icon: ReceiptText },
   { href: "/goals", label: "Goals", icon: Target },
   { href: "/budgets", label: "Budgets", icon: WalletCards },
-  { href: "/invoice", label: "Invoice", icon: BellRing },
+  { href: "/invoice", label: "Invoice", icon: FileBadge2 },
+  { href: "/debts", label: "Debt & Receivables", icon: HandCoins },
+  { href: "/investments", label: "Investments", icon: TrendingUp },
+  { href: "/subscriptions", label: "Subscriptions", icon: Repeat2 },
   { href: "/reports", label: "Reports", icon: FileText },
 ];
 
 export const bottomNavItems = [
+  { href: "/profile", label: "Profile", icon: UserCircle2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -65,7 +69,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-[260px] shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
+    <aside className="hidden w-[260px] shrink-0 border-r border-sidebar-border bg-sidebar xl:flex xl:flex-col">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-6">
         <Logo />
       </div>

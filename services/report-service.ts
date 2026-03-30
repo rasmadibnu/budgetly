@@ -5,6 +5,9 @@ import { getCurrentMonthKey } from "@/utils/date";
 import { getTransactions } from "@/services/transaction-service";
 import { getBudgetUsage } from "@/services/budget-service";
 import { getGoals } from "@/services/goal-service";
+import { getDebtsReceivables } from "@/services/debt-service";
+import { getInvestments } from "@/services/investment-service";
+import { getSubscriptions } from "@/services/subscription-service";
 import type { MonthlyReportRecord } from "@/types/app";
 
 interface AiMonthlyNarrative {
@@ -22,6 +25,9 @@ async function generateAiNarrative(summary: {
   net: number;
   budgets: unknown[];
   goals: unknown[];
+  debts: unknown[];
+  investments: unknown[];
+  subscriptions: unknown[];
 }): Promise<AiMonthlyNarrative | undefined> {
   if (!env.AI_API_KEY) {
     return undefined;
@@ -42,6 +48,7 @@ Rules:
 - Keep language concise and practical.
 - Use Indonesian household finance context and IDR.
 - Mention budget overruns, savings progress, and cash flow quality when relevant.
+- Consider debt exposure, receivable collection, investment performance, and unpaid subscriptions when relevant.
 - insights, risks, and actions should each contain 3 items if possible.
 
 Monthly data:
@@ -95,10 +102,13 @@ ${JSON.stringify(summary)}
 export async function generateMonthlyReport(month = getCurrentMonthKey()) {
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
-  const [transactions, budgets, goals] = await Promise.all([
+  const [transactions, budgets, goals, debts, investments, subscriptions] = await Promise.all([
     getTransactions({ month }),
     getBudgetUsage(month),
-    getGoals()
+    getGoals(),
+    getDebtsReceivables(),
+    getInvestments(),
+    getSubscriptions(month)
   ]);
 
   const summary = {
@@ -107,7 +117,10 @@ export async function generateMonthlyReport(month = getCurrentMonthKey()) {
     expense: transactions.summary.expense,
     net: transactions.summary.net,
     budgets,
-    goals
+    goals,
+    debts,
+    investments,
+    subscriptions
   };
   const aiReport = await generateAiNarrative(summary);
   const summaryPayload = {
@@ -175,12 +188,16 @@ export async function backupHousehold() {
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
 
-  const [categories, transactions, goals, budgets, invoices] = await Promise.all([
+  const [categories, transactions, goals, budgets, invoices, debts, investments, subscriptions, subscriptionCycles] = await Promise.all([
     supabase.from("transaction_categories").select("*").eq("household_id", householdId),
     supabase.from("transactions").select("*").eq("household_id", householdId),
     supabase.from("goals").select("*").eq("household_id", householdId),
     supabase.from("budgets").select("*").eq("household_id", householdId),
-    supabase.from("invoices").select("*").eq("household_id", householdId)
+    supabase.from("invoices").select("*").eq("household_id", householdId),
+    supabase.from("debts_receivables").select("*").eq("household_id", householdId),
+    supabase.from("investments").select("*").eq("household_id", householdId),
+    supabase.from("subscriptions").select("*").eq("household_id", householdId),
+    supabase.from("subscription_cycles").select("*").eq("household_id", householdId)
   ]);
 
   return {
@@ -190,6 +207,10 @@ export async function backupHousehold() {
     transactions: transactions.data ?? [],
     goals: goals.data ?? [],
     budgets: budgets.data ?? [],
-    invoices: invoices.data ?? []
+    invoices: invoices.data ?? [],
+    debts: debts.data ?? [],
+    investments: investments.data ?? [],
+    subscriptions: subscriptions.data ?? [],
+    subscriptionCycles: subscriptionCycles.data ?? []
   };
 }

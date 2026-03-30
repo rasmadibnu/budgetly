@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { MoneyValue } from "@/components/ui/money-value";
 import type { GoalCardData } from "@/types/app";
-import { formatCurrency } from "@/utils/format";
 
 export function GoalsProgressCard({ goals }: { goals: GoalCardData[] }) {
   return (
@@ -15,12 +15,12 @@ export function GoalsProgressCard({ goals }: { goals: GoalCardData[] }) {
           <div key={goal.id} className="space-y-2 rounded-2xl bg-muted/35 p-4">
             <div className="flex items-center justify-between">
               <p className="font-medium">{goal.name}</p>
-              <p className="text-sm text-muted-foreground">{formatCurrency(goal.remaining)} left</p>
+              <p className="text-sm text-muted-foreground"><MoneyValue value={goal.remaining} /> left</p>
             </div>
             <Progress value={goal.progress} />
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>{formatCurrency(goal.currentAmount)}</span>
-              <span>{formatCurrency(goal.targetAmount)}</span>
+              <MoneyValue value={goal.currentAmount} />
+              <MoneyValue value={goal.targetAmount} />
             </div>
           </div>
         ))}

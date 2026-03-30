@@ -8,12 +8,13 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MoneyValue } from "@/components/ui/money-value";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { GoalFormDialog } from "@/features/goals/components/goal-form-dialog";
 import { completeGoal } from "@/features/goals/server/actions";
 import type { GoalCardData } from "@/types/app";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatDate } from "@/utils/format";
 
 export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -36,7 +37,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
     <div className="space-y-6">
       <PageHeader
         eyebrow="Goals"
-        title="Savings targets for the family"
+        title="🎯 Savings targets for the family"
         description="Track longer-term priorities like an emergency fund, travel, or big purchases."
         actions={
           <Button onClick={() => setDialogOpen(true)}>
@@ -73,9 +74,9 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                 </div>
                 <Progress value={goal.progress} />
                 <div className="grid gap-3 text-sm md:grid-cols-3">
-                  <div><p className="text-muted-foreground">Current</p><p className="font-semibold">{formatCurrency(goal.currentAmount)}</p></div>
-                  <div><p className="text-muted-foreground">Target</p><p className="font-semibold">{formatCurrency(goal.targetAmount)}</p></div>
-                  <div><p className="text-muted-foreground">Remaining</p><p className="font-semibold">{formatCurrency(goal.remaining)}</p></div>
+                  <div><p className="text-muted-foreground">Current</p><MoneyValue value={goal.currentAmount} className="font-semibold" /></div>
+                  <div><p className="text-muted-foreground">Target</p><MoneyValue value={goal.targetAmount} className="font-semibold" /></div>
+                  <div><p className="text-muted-foreground">Remaining</p><MoneyValue value={goal.remaining} className="font-semibold" /></div>
                 </div>
               </CardContent>
             </Card>

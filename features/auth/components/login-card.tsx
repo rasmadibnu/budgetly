@@ -66,10 +66,6 @@ export function LoginCard() {
               <Input id="password" name="password" type="password" className="pl-9" required />
             </div>
           </div>
-          <div className="rounded-lg bg-muted/60 p-3 text-[12px] text-muted-foreground">
-            <p className="font-medium text-foreground">Demo credentials</p>
-            <p className="mt-1">`husband` or `wife` &middot; Password: `Budgetly123!`</p>
-          </div>
           {state?.error ? <p className="text-[13px] text-destructive">{state.error}</p> : null}
           <SubmitButton />
         </form>

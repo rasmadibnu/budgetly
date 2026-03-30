@@ -4,6 +4,10 @@ import { getHouseholdContext } from "@/services/household-service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdUsers } from "@/services/user-service";
 
+function formatUsername(value: string) {
+  return value.replace(/\b\w/g, (char: string) => char.toUpperCase());
+}
+
 export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promise<DashboardSnapshot> {
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
@@ -12,7 +16,6 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     transactionsResponse,
     categoriesResponse,
     goalsResponse,
-    invoicesResponse,
     budgetsResponse,
     usersResponse
   ] = await Promise.all([
@@ -23,7 +26,6 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       .order("date", { ascending: false }),
     supabase.from("transaction_categories").select("id, name").eq("household_id", householdId),
     supabase.from("goals").select("*").eq("household_id", householdId).order("target_date", { ascending: true }),
-    supabase.from("invoices").select("*").eq("household_id", householdId).order("due_date", { ascending: true }),
     supabase.from("budget_usage").select("*").eq("household_id", householdId).eq("month", month),
     getHouseholdUsers()
   ]);
@@ -31,11 +33,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   if (transactionsResponse.error) throw transactionsResponse.error;
   if (categoriesResponse.error) throw categoriesResponse.error;
   if (goalsResponse.error) throw goalsResponse.error;
-  if (invoicesResponse.error) throw invoicesResponse.error;
   if (budgetsResponse.error) throw budgetsResponse.error;
   const categoriesById = new Map(categoriesResponse.data.map((category) => [category.id, category.name]));
   const usersById = new Map(
-    usersResponse.map((profile) => [profile.id, profile.email.split("@")[0].replace(/\b\w/g, (char: string) => char.toUpperCase())])
+    usersResponse.map((profile) => [profile.id, formatUsername(profile.username)])
   );
 
   const currentMonthTransactions = transactionsResponse.data.filter((transaction) => transaction.date.startsWith(month));
@@ -89,6 +90,18 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   });
 
   const budgetRemaining = budgetsResponse.data.reduce((sum, budget) => sum + budget.remaining_amount, 0);
+  const budgetHighlights = budgetsResponse.data
+    .map((budget) => ({
+      id: budget.budget_id,
+      category: categoriesById.get(budget.category_id) ?? "Uncategorized",
+      month: budget.month,
+      amount: budget.budget_amount,
+      spent: budget.spent_amount,
+      remaining: budget.remaining_amount,
+      percentage: Number(budget.usage_percentage)
+    }))
+    .sort((a, b) => b.percentage - a.percentage)
+    .slice(0, 4);
 
   return {
     totalBalance,
@@ -115,16 +128,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       expense: values.expense
     })),
     categoryDistribution: Array.from(categoryDistributionMap.entries()).map(([name, value]) => ({ name, value })),
-    upcomingInvoices: invoicesResponse.data.slice(0, 4).map((invoice) => ({
-      id: invoice.id,
-      name: invoice.name,
-      clientName: invoice.client_name,
-      amount: invoice.amount,
-      issuedDate: invoice.issued_date,
-      dueDate: invoice.due_date,
-      status: invoice.status === "paid" ? "paid" : "unpaid",
-      notes: invoice.notes
-    })),
+    budgetHighlights,
     activeGoals: activeGoals.slice(0, 4)
   };
 }

@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MoneyValue } from "@/components/ui/money-value";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { BudgetFormDialog } from "@/features/budgets/components/budget-form-dialog";
 import type { BudgetUsageItem, CategoryOption } from "@/types/app";
-import { formatCurrency, formatPercentage } from "@/utils/format";
+import { formatPercentage } from "@/utils/format";
 
 function getBudgetTone(percentage: number) {
   if (percentage > 90) return "text-danger";
@@ -27,7 +28,7 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
     <div className="space-y-6">
       <PageHeader
         eyebrow="Budgets"
-        title="Category-based monthly limits"
+        title="🧾 Category-based monthly limits"
         description="Set category guardrails and see the percentage used update automatically from transactions."
         actions={
           <Button onClick={() => setDialogOpen(true)}>
@@ -59,9 +60,9 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
                 </div>
                 <Progress value={item.percentage} className={item.percentage > 90 ? "[&>div]:bg-danger" : item.percentage >= 70 ? "[&>div]:bg-warning" : "[&>div]:bg-success"} />
                 <div className="grid gap-3 text-sm md:grid-cols-3">
-                  <div><p className="text-muted-foreground">Budget</p><p className="font-semibold">{formatCurrency(item.amount)}</p></div>
-                  <div><p className="text-muted-foreground">Spent</p><p className="font-semibold">{formatCurrency(item.spent)}</p></div>
-                  <div><p className="text-muted-foreground">Remaining</p><p className="font-semibold">{formatCurrency(item.remaining)}</p></div>
+                  <div><p className="text-muted-foreground">Budget</p><MoneyValue value={item.amount} className="font-semibold" /></div>
+                  <div><p className="text-muted-foreground">Spent</p><MoneyValue value={item.spent} className="font-semibold" /></div>
+                  <div><p className="text-muted-foreground">Remaining</p><MoneyValue value={item.remaining} className="font-semibold" /></div>
                 </div>
               </CardContent>
             </Card>

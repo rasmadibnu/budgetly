@@ -9,12 +9,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/money-value";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { InvoiceFormDialog } from "@/features/invoices/components/invoice-form-dialog";
 import { deleteInvoice, updateInvoicePaymentStatus } from "@/features/invoices/server/actions";
 import type { InvoiceInput } from "@/features/invoices/schemas/invoice-schema";
 import type { InvoiceItem } from "@/types/app";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatDate } from "@/utils/format";
 
 export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -60,11 +61,17 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
     });
   };
 
+  const paidInvoices = initialInvoices.filter((invoice) => invoice.status === "paid");
+  const unpaidInvoices = initialInvoices.filter((invoice) => invoice.status === "unpaid");
+  const totalBilled = initialInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const totalCollected = paidInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const totalOutstanding = unpaidInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Invoice"
-        title="Client invoices"
+        title="🧾 Client invoices"
         description="Track invoices issued to your clients and mark each one as paid or unpaid."
         actions={
           <Button onClick={() => {
@@ -82,6 +89,28 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
         onSuccess={() => router.refresh()}
         initialData={editingInvoice}
       />
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground">Total billed</p>
+            <div className="mt-1 text-xl font-semibold"><MoneyValue value={totalBilled} /></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground">Collected</p>
+            <div className="mt-1 text-xl font-semibold"><MoneyValue value={totalCollected} /></div>
+            <p className="mt-1 text-xs text-muted-foreground">{paidInvoices.length} paid invoice(s)</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-muted-foreground">Outstanding</p>
+            <div className="mt-1 text-xl font-semibold"><MoneyValue value={totalOutstanding} /></div>
+            <p className="mt-1 text-xs text-muted-foreground">{unpaidInvoices.length} unpaid invoice(s)</p>
+          </CardContent>
+        </Card>
+      </div>
       <div className="space-y-4">
         {!initialInvoices.length ? (
           <EmptyState title="No invoices yet" description="Create your first client invoice and track payment status here." />
@@ -102,7 +131,7 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
                   {invoice.notes ? <p className="mt-1 text-[12px] text-muted-foreground">{invoice.notes}</p> : null}
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold">{formatCurrency(invoice.amount)}</p>
+                  <MoneyValue value={invoice.amount} className="text-sm font-semibold" />
                   <Button variant="outline" size="sm" onClick={() => onEdit(invoice)} disabled={isPending}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit

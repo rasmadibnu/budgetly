@@ -4,6 +4,10 @@ import { getCurrentMonthKey, getMonthDateRange } from "@/utils/date";
 import { toCsv } from "@/utils/csv";
 import { getHouseholdUsers } from "@/services/user-service";
 
+function formatUsername(value: string) {
+  return value.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 interface TransactionFilters {
   search?: string;
   type?: string;
@@ -42,7 +46,7 @@ export async function getTransactions(filters: TransactionFilters = {}) {
   if (transactionError) throw transactionError;
 
   const categoriesById = new Map((categories ?? []).map((item) => [item.id, item.name]));
-  const usersById = new Map(users.map((item) => [item.id, item.email]));
+  const usersById = new Map(users.map((item) => [item.id, formatUsername(item.username)]));
 
   const rows = (transactions ?? []).map((transaction) => ({
     id: transaction.id,

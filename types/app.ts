@@ -1,4 +1,14 @@
-import type { GoalStatus, InvoiceStatus, Recurrence, Role, TransactionType } from "@/types/database";
+import type {
+  DebtDirection,
+  DebtStatus,
+  GoalStatus,
+  InvestmentStatus,
+  InvoiceStatus,
+  Recurrence,
+  Role,
+  SubscriptionStatus,
+  TransactionType
+} from "@/types/database";
 
 export interface UserProfile {
   id: string;
@@ -69,7 +79,7 @@ export interface DashboardSnapshot {
   expenseSeries: Array<{ month: string; amount: number }>;
   incomeExpenseSeries: Array<{ month: string; income: number; expense: number }>;
   categoryDistribution: Array<{ name: string; value: number }>;
-  upcomingInvoices: InvoiceItem[];
+  budgetHighlights: BudgetUsageItem[];
   activeGoals: GoalCardData[];
 }
 
@@ -84,6 +94,9 @@ export interface MonthlyReportRecord {
     net: number;
     budgets: BudgetUsageItem[];
     goals: GoalCardData[];
+    debts: DebtReceivableItem[];
+    investments: InvestmentItem[];
+    subscriptions: SubscriptionItem[];
     aiReport?: {
       overview: string;
       insights: string[];
@@ -91,5 +104,51 @@ export interface MonthlyReportRecord {
       actions: string[];
       generatedAt: string;
     };
+  };
+}
+
+export interface DebtReceivableItem {
+  id: string;
+  direction: DebtDirection;
+  name: string;
+  counterparty: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  dueDate: string | null;
+  status: DebtStatus;
+  notes: string | null;
+}
+
+export interface InvestmentItem {
+  id: string;
+  name: string;
+  platform: string | null;
+  type: string;
+  amount: number;
+  currentValue: number;
+  gainLoss: number;
+  startedAt: string;
+  status: InvestmentStatus;
+  notes: string | null;
+}
+
+export interface SubscriptionItem {
+  id: string;
+  name: string;
+  vendor: string;
+  amount: number;
+  billingDay: number;
+  categoryId: string | null;
+  paymentMethod: string | null;
+  startDate: string;
+  status: SubscriptionStatus;
+  notes: string | null;
+  cycle: {
+    id: string;
+    month: string;
+    dueDate: string;
+    status: "paid" | "unpaid" | "overdue";
+    linkedTransactionId: string | null;
   };
 }

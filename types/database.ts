@@ -5,6 +5,10 @@ export type Role = "owner" | "partner";
 export type GoalStatus = "active" | "completed" | "cancelled";
 export type Recurrence = "monthly" | "yearly" | "one-time";
 export type InvoiceStatus = "pending" | "paid" | "overdue";
+export type DebtDirection = "debt" | "receivable";
+export type DebtStatus = "open" | "settled";
+export type InvestmentStatus = "active" | "closed";
+export type SubscriptionStatus = "active" | "paused" | "cancelled";
 
 export interface Database {
   public: {
@@ -247,6 +251,134 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["monthly_reports"]["Insert"]>;
+        Relationships: [];
+      };
+      debts_receivables: {
+        Row: {
+          id: string;
+          household_id: string;
+          direction: DebtDirection;
+          name: string;
+          counterparty: string;
+          total_amount: number;
+          paid_amount: number;
+          due_date: string | null;
+          status: DebtStatus;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          direction: DebtDirection;
+          name: string;
+          counterparty: string;
+          total_amount: number;
+          paid_amount?: number;
+          due_date?: string | null;
+          status?: DebtStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["debts_receivables"]["Insert"]>;
+        Relationships: [];
+      };
+      investments: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          platform: string | null;
+          type: string;
+          amount: number;
+          current_value: number;
+          started_at: string;
+          status: InvestmentStatus;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          platform?: string | null;
+          type: string;
+          amount: number;
+          current_value: number;
+          started_at: string;
+          status?: InvestmentStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["investments"]["Insert"]>;
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          household_id: string;
+          name: string;
+          vendor: string;
+          amount: number;
+          billing_day: number;
+          category_id: string | null;
+          payment_method: string | null;
+          start_date: string;
+          status: SubscriptionStatus;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          name: string;
+          vendor: string;
+          amount: number;
+          billing_day: number;
+          category_id?: string | null;
+          payment_method?: string | null;
+          start_date: string;
+          status?: SubscriptionStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["subscriptions"]["Insert"]>;
+        Relationships: [];
+      };
+      subscription_cycles: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          household_id: string;
+          month: string;
+          amount: number;
+          due_date: string;
+          status: InvoiceStatus;
+          linked_transaction_id: string | null;
+          paid_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          household_id: string;
+          month: string;
+          amount: number;
+          due_date: string;
+          status?: InvoiceStatus;
+          linked_transaction_id?: string | null;
+          paid_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["subscription_cycles"]["Insert"]>;
         Relationships: [];
       };
     };

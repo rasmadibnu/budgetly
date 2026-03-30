@@ -12,10 +12,11 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/money-value";
 import { deleteTransaction } from "@/features/transactions/server/actions";
 import { TransactionFormDialog } from "@/features/transactions/components/transaction-form-dialog";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatDate } from "@/utils/format";
 
 export function TransactionsClient({
   initialRows,
@@ -78,7 +79,7 @@ export function TransactionsClient({
     <div className="space-y-8">
       <PageHeader
         eyebrow="Transactions"
-        title="Every rupiah, organized"
+        title="💸 Every rupiah, organized"
         description="Searchable household ledger with export, receipt links, and recurring support."
         actions={
           <div className="flex gap-3">
@@ -100,9 +101,9 @@ export function TransactionsClient({
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly income</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(summary.income)}</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly expense</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(summary.expense)}</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Net flow</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(summary.net)}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly income</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.income} /></div></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly expense</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.expense} /></div></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Net flow</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.net} /></div></CardContent></Card>
       </div>
 
       <Card>
@@ -137,7 +138,7 @@ export function TransactionsClient({
                         <TableCell>{row.userName}</TableCell>
                         <TableCell><Badge variant="outline">{row.category}</Badge></TableCell>
                         <TableCell>{row.description ?? "No description"}</TableCell>
-                        <TableCell className={row.type === "income" ? "text-success" : ""}>{formatCurrency(row.amount)}</TableCell>
+                        <TableCell className={row.type === "income" ? "text-success" : ""}><MoneyValue value={row.amount} /></TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button

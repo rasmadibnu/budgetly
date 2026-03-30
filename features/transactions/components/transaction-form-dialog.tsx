@@ -22,6 +22,15 @@ import { transactionSchema, type TransactionInput } from "@/features/transaction
 import { createTransaction, updateTransaction } from "@/features/transactions/server/actions";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
 
+const paymentMethodOptions = [
+  "Cash",
+  "Bank Transfer",
+  "Debit Card",
+  "Credit Card",
+  "QRIS",
+  "E-Wallet"
+] as const;
+
 const defaultValues: TransactionInput = {
   type: "expense",
   amount: 0,
@@ -156,12 +165,22 @@ export function TransactionFormDialog({
             <Textarea id="description" {...form.register("description")} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment method</Label>
-            <Input id="paymentMethod" {...form.register("paymentMethod")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="attachmentUrl">Attachment URL</Label>
-            <Input id="attachmentUrl" placeholder="https://..." {...form.register("attachmentUrl")} />
+            <Label>Payment method</Label>
+            <Select
+              value={form.watch("paymentMethod") ?? "Bank Transfer"}
+              onValueChange={(value) => form.setValue("paymentMethod", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                {paymentMethodOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter className="md:col-span-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

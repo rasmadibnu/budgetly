@@ -1,7 +1,13 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { requireUser } from "@/lib/auth";
+import { getCategories } from "@/services/category-service";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  return <AppShell email={user.email ?? "budgetly@household.local"}>{children}</AppShell>;
+  const categories = await getCategories();
+  return (
+    <AppShell email={user.email ?? "budgetly@household.local"} categories={categories}>
+      {children}
+    </AppShell>
+  );
 }

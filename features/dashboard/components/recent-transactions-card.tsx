@@ -2,8 +2,9 @@ import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MoneyValue } from "@/components/ui/money-value";
 import type { TransactionListItem } from "@/types/app";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatDate } from "@/utils/format";
 
 export function RecentTransactionsCard({ transactions }: { transactions: TransactionListItem[] }) {
   return (
@@ -25,7 +26,7 @@ export function RecentTransactionsCard({ transactions }: { transactions: Transac
               </div>
             </div>
             <div className="text-right">
-              <p className="font-semibold">{formatCurrency(transaction.amount)}</p>
+              <MoneyValue value={transaction.amount} className="font-semibold" />
               <div className="mt-1 flex items-center justify-end gap-2">
                 <Badge variant="outline">{formatDate(transaction.date)}</Badge>
               </div>
