@@ -143,7 +143,52 @@ export function TransactionsClient({
             <EmptyState title="No transactions yet" description="Create the first household transaction to start tracking cash flow." actionLabel="Add transaction" onAction={() => setDialogOpen(true)} />
           ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="overflow-x-auto">
+              <div className="space-y-3 md:hidden">
+                {paginatedRows.map((row) => (
+                  <div key={row.id} className="rounded-2xl border border-border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">{row.userName}</p>
+                        <Badge
+                          variant="outline"
+                          className="border-transparent"
+                          style={{
+                            backgroundColor: row.categoryId ? hexToRgba(categoryColors.get(row.categoryId) ?? "", 0.14) : undefined,
+                            color: row.categoryId ? categoryColors.get(row.categoryId) ?? undefined : undefined
+                          }}
+                        >
+                          <span
+                            className="mr-1.5 h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: row.categoryId ? categoryColors.get(row.categoryId) ?? "#94a3b8" : "#94a3b8" }}
+                          />
+                          {row.category}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">{formatDateTime(row.createdAt)}</p>
+                        <MoneyValue value={row.amount} className={row.type === "income" ? "mt-1 font-semibold text-success" : "mt-1 font-semibold"} />
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">{row.description ?? "No description"}</p>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditing(row);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingId(row.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>

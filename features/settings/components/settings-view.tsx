@@ -219,7 +219,37 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
           </CardHeader>
           <CardContent>
             <div className="overflow-hidden rounded-2xl border border-border">
-              <div className="overflow-x-auto">
+              <div className="space-y-3 p-4 md:hidden">
+                {localCategories.map((category) => (
+                  <div key={category.id} className="rounded-2xl border border-border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+                        <div>
+                          <p className="font-medium">{category.name}</p>
+                          <p className="text-xs text-muted-foreground">Used across forms, budgets, and reports</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline">{category.type}</Badge>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: category.color }} />
+                      <span className="font-mono text-xs text-muted-foreground">{category.color}</span>
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setDeletingCategory(category)} disabled={isPending}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
