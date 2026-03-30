@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,7 +101,7 @@ export function BudgetFormDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Budget amount</Label>
-            <Input type="number" {...form.register("amount")} />
+            <AmountInput value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>

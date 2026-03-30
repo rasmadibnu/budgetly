@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdContext } from "@/services/household-service";
@@ -34,7 +35,7 @@ export async function createInvoice(input: InvoiceInput) {
 }
 
 export async function updateInvoice(input: InvoiceInput) {
-  const parsed = invoiceSchema.extend({ id: invoiceSchema.shape.id.unwrap() }).parse(input);
+  const parsed = invoiceSchema.extend({ id: z.string().uuid() }).parse(input);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("invoices")

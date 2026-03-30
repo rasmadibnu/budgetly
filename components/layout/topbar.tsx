@@ -40,7 +40,15 @@ function shiftMonth(current: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export function Topbar({ email, categories }: { email: string; categories: CategoryOption[] }) {
+function capitalizeUsername(value: string) {
+  return value
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+export function Topbar({ username, categories }: { username: string; categories: CategoryOption[] }) {
   const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
   const [tabletNavOpen, setTabletNavOpen] = useState(false);
@@ -51,7 +59,8 @@ export function Topbar({ email, categories }: { email: string; categories: Categ
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useMobile();
-  const initials = email.slice(0, 2).toUpperCase();
+  const displayName = capitalizeUsername(username);
+  const initials = displayName.slice(0, 2).toUpperCase();
   const month = normalizeMonthKey(searchParams.get("month"));
   const amountsVisible = useBudgetlyStore((state) => state.amountsVisible);
   const toggleAmountsVisible = useBudgetlyStore((state) => state.toggleAmountsVisible);
@@ -279,7 +288,7 @@ export function Topbar({ email, categories }: { email: string; categories: Categ
                 </AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
-                <p className="text-[13px] font-medium leading-none">{email}</p>
+                <p className="text-[13px] font-medium leading-none">{displayName}</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">Member</p>
               </div>
             </div>

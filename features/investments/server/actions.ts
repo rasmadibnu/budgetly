@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { investmentSchema, type InvestmentInput } from "@/features/investments/schemas/investment-schema";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export async function createInvestment(input: InvestmentInput) {
 }
 
 export async function updateInvestment(input: InvestmentInput) {
-  const parsed = investmentSchema.extend({ id: investmentSchema.shape.id.unwrap() }).parse(input);
+  const parsed = investmentSchema.extend({ id: z.string().uuid() }).parse(input);
   const supabase = createSupabaseServerClient();
   const { error } = await supabase
     .from("investments")

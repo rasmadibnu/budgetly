@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 export const debtBaseSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.preprocess((value) => (value === "" ? undefined : value), z.string().uuid().optional()),
   direction: z.enum(["debt", "receivable"]),
   name: z.string().min(1, "Name is required"),
   counterparty: z.string().min(1, "Counterparty is required"),
   totalAmount: z.coerce.number().positive("Amount must be greater than zero"),
   paidAmount: z.coerce.number().min(0, "Paid amount must be zero or greater"),
-  dueDate: z.string().optional(),
+  dueDate: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional()),
   status: z.enum(["open", "settled"]),
-  notes: z.string().optional()
+  notes: z.preprocess((value) => (value === "" ? undefined : value), z.string().optional())
 });
 
 export const debtSchema = debtBaseSchema.refine((value) => value.paidAmount <= value.totalAmount, {

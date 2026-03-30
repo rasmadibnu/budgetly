@@ -13,7 +13,9 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,17 +94,17 @@ export function InvoiceFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Amount</Label>
-              <Input type="number" {...form.register("amount")} />
+              <AmountInput value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Issued date</Label>
-              <Input type="date" {...form.register("issuedDate")} />
+              <DatePickerField value={form.watch("issuedDate")} onChange={(value) => form.setValue("issuedDate", value)} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Due date</Label>
-              <Input type="date" {...form.register("dueDate")} />
+              <DatePickerField value={form.watch("dueDate")} onChange={(value) => form.setValue("dueDate", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>

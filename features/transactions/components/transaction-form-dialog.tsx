@@ -13,7 +13,9 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,22 +24,13 @@ import { transactionSchema, type TransactionInput } from "@/features/transaction
 import { createTransaction, updateTransaction } from "@/features/transactions/server/actions";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
 
-const paymentMethodOptions = [
-  "Cash",
-  "Bank Transfer",
-  "Debit Card",
-  "Credit Card",
-  "QRIS",
-  "E-Wallet"
-] as const;
-
 const defaultValues: TransactionInput = {
   type: "expense",
   amount: 0,
   categoryId: null,
   description: "",
   date: new Date().toISOString().slice(0, 10),
-  paymentMethod: "Bank Transfer",
+  paymentMethod: null,
   attachmentUrl: null,
   isRecurring: false,
   recurrenceRule: null
@@ -133,7 +126,7 @@ export function TransactionFormDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Amount</Label>
-            <Input id="amount" type="number" {...form.register("amount")} />
+            <AmountInput id="amount" value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
           </div>
           <div className="space-y-2">
             <Label>Category</Label>
@@ -158,29 +151,11 @@ export function TransactionFormDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input id="date" type="date" {...form.register("date")} />
+            <DatePickerField id="date" value={form.watch("date")} onChange={(value) => form.setValue("date", value)} />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" {...form.register("description")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Payment method</Label>
-            <Select
-              value={form.watch("paymentMethod") ?? "Bank Transfer"}
-              onValueChange={(value) => form.setValue("paymentMethod", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
-              <SelectContent>
-                {paymentMethodOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           <DialogFooter className="md:col-span-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

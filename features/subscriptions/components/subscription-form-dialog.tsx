@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { createSubscription, updateSubscription } from "@/features/subscriptions/server/actions";
 import { subscriptionSchema, type SubscriptionInput } from "@/features/subscriptions/schemas/subscription-schema";
 import type { CategoryOption } from "@/types/app";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,7 +91,7 @@ export function SubscriptionFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Amount</Label>
-              <Input type="number" {...form.register("amount")} />
+              <AmountInput value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Billing day</Label>
@@ -109,15 +111,11 @@ export function SubscriptionFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Payment method</Label>
-              <Input {...form.register("paymentMethod")} placeholder="Credit Card or Debit Card" />
-            </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Start date</Label>
-              <Input type="date" {...form.register("startDate")} />
+              <DatePickerField value={form.watch("startDate")} onChange={(value) => form.setValue("startDate", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>

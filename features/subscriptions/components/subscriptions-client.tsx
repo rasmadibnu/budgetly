@@ -147,10 +147,9 @@ export function SubscriptionsClient({
                     <Button variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
                   </div>
                 </div>
-                <div className="grid gap-3 text-sm md:grid-cols-4">
+                <div className="grid gap-3 text-sm md:grid-cols-3">
                   <div><p className="text-muted-foreground">Amount</p><MoneyValue value={item.amount} className="font-semibold" /></div>
                   <div><p className="text-muted-foreground">Month</p><p className="font-semibold">{month}</p></div>
-                  <div><p className="text-muted-foreground">Payment method</p><p className="font-semibold">{item.paymentMethod ?? "-"}</p></div>
                   <div><p className="text-muted-foreground">Transaction sync</p><p className="font-semibold">{item.cycle.linkedTransactionId ? "Created" : "Not created"}</p></div>
                 </div>
               </CardContent>

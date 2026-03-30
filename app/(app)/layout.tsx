@@ -6,7 +6,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const user = await requireUser();
   const categories = await getCategories();
   return (
-    <AppShell email={user.email ?? "budgetly@household.local"} categories={categories}>
+    <AppShell username={user.username} categories={categories}>
       {children}
     </AppShell>
   );

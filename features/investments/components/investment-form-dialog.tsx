@@ -7,7 +7,9 @@ import { toast } from "sonner";
 
 import { createInvestment, updateInvestment } from "@/features/investments/server/actions";
 import { investmentSchema, type InvestmentInput } from "@/features/investments/schemas/investment-schema";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,17 +113,17 @@ export function InvestmentFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Initial amount</Label>
-              <Input type="number" {...form.register("amount")} />
+              <AmountInput value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Current value</Label>
-              <Input type="number" {...form.register("currentValue")} />
+              <AmountInput value={form.watch("currentValue")} onValueChange={(value) => form.setValue("currentValue", value)} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Start date</Label>
-              <Input type="date" {...form.register("startedAt")} />
+              <DatePickerField value={form.watch("startedAt")} onChange={(value) => form.setValue("startedAt", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>

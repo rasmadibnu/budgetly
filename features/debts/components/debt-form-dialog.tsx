@@ -7,7 +7,9 @@ import { toast } from "sonner";
 
 import { createDebtReceivable, updateDebtReceivable } from "@/features/debts/server/actions";
 import { debtSchema, type DebtInput } from "@/features/debts/schemas/debt-schema";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,16 +107,16 @@ export function DebtFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Total amount</Label>
-              <Input type="number" {...form.register("totalAmount")} />
+              <AmountInput value={form.watch("totalAmount")} onValueChange={(value) => form.setValue("totalAmount", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Paid amount</Label>
-              <Input type="number" {...form.register("paidAmount")} />
+              <AmountInput value={form.watch("paidAmount")} onValueChange={(value) => form.setValue("paidAmount", value)} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Due date</Label>
-            <Input type="date" {...form.register("dueDate")} />
+            <DatePickerField value={form.watch("dueDate") || ""} onChange={(value) => form.setValue("dueDate", value)} placeholder="Optional due date" />
           </div>
           <div className="space-y-1.5">
             <Label>Notes</Label>

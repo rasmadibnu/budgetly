@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { subscriptionSchema, type SubscriptionInput } from "@/features/subscriptions/schemas/subscription-schema";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -35,7 +36,7 @@ export async function createSubscription(input: SubscriptionInput) {
 }
 
 export async function updateSubscription(input: SubscriptionInput) {
-  const parsed = subscriptionSchema.extend({ id: subscriptionSchema.shape.id.unwrap() }).parse(input);
+  const parsed = subscriptionSchema.extend({ id: z.string().uuid() }).parse(input);
   const supabase = createSupabaseServerClient();
   const { error } = await supabase
     .from("subscriptions")

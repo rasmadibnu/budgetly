@@ -74,6 +74,17 @@ export function Sidebar() {
         <Logo />
       </div>
       <SidebarNav />
+      <div className="border-t border-sidebar-border px-4 py-3 text-left text-[11px] text-muted-foreground">
+        Made with Codex by{" "}
+        <a
+          href="https://github.com/rasmadibnu/budgetly"
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-foreground"
+        >
+          Rasmad Ibnu
+        </a>
+      </div>
     </aside>
   );
 }

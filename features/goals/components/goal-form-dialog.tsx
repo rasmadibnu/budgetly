@@ -13,7 +13,9 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Button } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createGoal, updateGoal } from "@/features/goals/server/actions";
@@ -97,21 +99,21 @@ export function GoalFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Target amount</Label>
-              <Input type="number" {...form.register("targetAmount")} />
+              <AmountInput value={form.watch("targetAmount")} onValueChange={(value) => form.setValue("targetAmount", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Current amount</Label>
-              <Input type="number" {...form.register("currentAmount")} />
+              <AmountInput value={form.watch("currentAmount")} onValueChange={(value) => form.setValue("currentAmount", value)} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Start date</Label>
-              <Input type="date" {...form.register("startDate")} />
+              <DatePickerField value={form.watch("startDate")} onChange={(value) => form.setValue("startDate", value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Target date</Label>
-              <Input type="date" {...form.register("targetDate")} />
+              <DatePickerField value={form.watch("targetDate") || ""} onChange={(value) => form.setValue("targetDate", value)} placeholder="Optional target date" />
             </div>
           </div>
           <DialogFooter>
