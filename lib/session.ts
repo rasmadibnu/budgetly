@@ -66,6 +66,6 @@ export async function verifySignedSession(value?: string | null): Promise<Sessio
 }
 
 export async function getSession() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   return verifySignedSession(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }

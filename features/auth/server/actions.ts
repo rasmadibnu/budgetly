@@ -42,7 +42,8 @@ export async function loginAction(_: unknown, formData: FormData) {
     role: user.role
   });
 
-  cookies().set(SESSION_COOKIE_NAME, session, {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, session, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -55,6 +56,7 @@ export async function loginAction(_: unknown, formData: FormData) {
 }
 
 export async function logoutAction() {
-  cookies().delete(SESSION_COOKIE_NAME);
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE_NAME);
   redirect("/login");
 }

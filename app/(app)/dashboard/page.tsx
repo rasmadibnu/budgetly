@@ -5,9 +5,10 @@ import { normalizeMonthKey } from "@/utils/date";
 export default async function DashboardPage({
   searchParams
 }: {
-  searchParams?: { month?: string };
+  searchParams?: Promise<{ month?: string }>;
 }) {
-  const month = normalizeMonthKey(searchParams?.month);
+  const resolvedSearchParams = await searchParams;
+  const month = normalizeMonthKey(resolvedSearchParams?.month);
   const snapshot = await getDashboardSnapshot(month);
   return <DashboardView snapshot={snapshot} />;
 }

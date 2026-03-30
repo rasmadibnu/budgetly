@@ -27,7 +27,8 @@ export const requireUser = cache(async (): Promise<AuthenticatedUser> => {
     .single();
 
   if (error || !user) {
-    cookies().delete(SESSION_COOKIE_NAME);
+    const cookieStore = await cookies();
+    cookieStore.delete(SESSION_COOKIE_NAME);
     redirect("/login");
   }
 
