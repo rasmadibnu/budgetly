@@ -61,3 +61,10 @@ export async function completeGoal(id: string) {
   if (error) throw error;
   revalidateGoals();
 }
+
+export async function deleteGoal(id: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("goals").delete().eq("id", id);
+  if (error) throw error;
+  revalidateGoals();
+}

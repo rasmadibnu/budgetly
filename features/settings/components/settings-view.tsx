@@ -8,6 +8,7 @@ import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { deleteCategory, upsertCategory } from "@/features/categories/server/actions";
 import { categorySchema, type CategoryInput } from "@/features/categories/schemas/category-schema";
 import { exportBackupAction, generateMonthlyReportAction } from "@/features/settings/server/actions";
@@ -44,6 +46,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<CategoryOption | null>(null);
   const [isPending, startTransition] = useTransition();
   const form = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
@@ -189,60 +192,75 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Category master data</CardTitle>
-            <CardDescription>Maintain reusable categories used by transactions, budgets, reports, and charts.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
-              <p className="text-sm text-muted-foreground">
-                Add or edit category master data in a focused modal so the settings page stays cleaner on desktop and mobile.
-              </p>
-            </div>
-            <Button className="w-full" onClick={startCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add category
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Category list</CardTitle>
               <CardDescription>Master data for all household income and expense classifications.</CardDescription>
             </div>
-            <Download className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              <Button onClick={startCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add category
+              </Button>
+              <Button type="button" variant="outline" onClick={exportBackup} disabled={isPending}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
-            {localCategories.map((category) => (
-              <div key={category.id} className="rounded-2xl border border-border p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
-                    <div>
-                      <p className="font-medium">{category.name}</p>
-                      <p className="text-sm text-muted-foreground">{category.type}</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">{category.type}</Badge>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => onDeleteCategory(category)} disabled={isPending}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
-                <div className="mt-3 rounded-xl bg-muted/45 px-3 py-2 text-xs text-muted-foreground">
-                  Used as master data across transaction forms, budgets, and reports.
-                </div>
+          <CardContent>
+            <div className="overflow-hidden rounded-2xl border border-border">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Color</TableHead>
+                      <TableHead className="w-[180px] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {localCategories.map((category) => (
+                      <TableRow key={category.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+                            <div>
+                              <p className="font-medium">{category.name}</p>
+                              <p className="text-xs text-muted-foreground">Used across forms, budgets, and reports</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{category.type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: category.color }} />
+                            <span className="font-mono text-xs text-muted-foreground">{category.color}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setDeletingCategory(category)} disabled={isPending}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -324,6 +342,14 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={Boolean(deletingCategory)}
+        onOpenChange={(open) => !open && setDeletingCategory(null)}
+        title="Delete category?"
+        description={deletingCategory ? `This will permanently remove "${deletingCategory.name}" if it is not used by budgets or transactions.` : "This category will be removed permanently."}
+        isPending={isPending}
+        onConfirm={() => deletingCategory && onDeleteCategory(deletingCategory)}
+      />
     </div>
   );
 }

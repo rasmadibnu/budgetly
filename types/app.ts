@@ -44,12 +44,14 @@ export interface GoalCardData {
   currentAmount: number;
   progress: number;
   remaining: number;
+  startDate: string;
   targetDate: string | null;
   status: GoalStatus;
 }
 
 export interface BudgetUsageItem {
   id: string;
+  categoryId: string;
   category: string;
   month: string;
   amount: number;

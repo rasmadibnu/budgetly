@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { MoneyValue } from "@/components/ui/money-value";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { InvoiceFormDialog } from "@/features/invoices/components/invoice-form-dialog";
@@ -20,6 +21,7 @@ import { formatDate } from "@/utils/format";
 export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceInput | undefined>(undefined);
+  const [deletingInvoice, setDeletingInvoice] = useState<InvoiceItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -89,6 +91,14 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
         onSuccess={() => router.refresh()}
         initialData={editingInvoice}
       />
+      <ConfirmDialog
+        open={Boolean(deletingInvoice)}
+        onOpenChange={(open) => !open && setDeletingInvoice(null)}
+        title="Delete invoice?"
+        description={deletingInvoice ? `This will permanently remove "${deletingInvoice.name}".` : "This invoice will be removed permanently."}
+        isPending={isPending}
+        onConfirm={() => deletingInvoice && onDelete(deletingInvoice)}
+      />
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-5">
@@ -144,7 +154,7 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
                     <CircleDashed className="mr-2 h-4 w-4" />
                     Unpaid
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => onDelete(invoice)} disabled={isPending}>
+                  <Button variant="outline" size="sm" onClick={() => setDeletingInvoice(invoice)} disabled={isPending}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </Button>

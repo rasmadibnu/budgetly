@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { MoneyValue } from "@/components/ui/money-value";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { SubscriptionFormDialog } from "@/features/subscriptions/components/subscription-form-dialog";
@@ -28,6 +29,7 @@ export function SubscriptionsClient({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SubscriptionInput | undefined>();
+  const [deletingItem, setDeletingItem] = useState<SubscriptionItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -87,6 +89,14 @@ export function SubscriptionsClient({
         actions={<Button onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add subscription</Button>}
       />
       <SubscriptionFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => router.refresh()} initialData={editingItem} categories={categories} />
+      <ConfirmDialog
+        open={Boolean(deletingItem)}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="Delete subscription?"
+        description={deletingItem ? `This will permanently remove "${deletingItem.name}" and its generated transaction links.` : "This subscription will be removed permanently."}
+        isPending={isPending}
+        onConfirm={() => deletingItem && onDelete(deletingItem.id)}
+      />
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-5">
@@ -134,7 +144,7 @@ export function SubscriptionsClient({
                     <Button variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
                     <Button variant={item.cycle.status === "paid" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "paid")} disabled={item.status !== "active" || item.cycle.status === "paid" || isPending}><CheckCircle2 className="mr-2 h-4 w-4" />Paid</Button>
                     <Button variant={item.cycle.status === "unpaid" || item.cycle.status === "overdue" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "unpaid")} disabled={item.status !== "active" || (item.cycle.status !== "paid" && item.cycle.linkedTransactionId === null) || isPending}><CircleDashed className="mr-2 h-4 w-4" />Unpaid</Button>
-                    <Button variant="outline" size="sm" onClick={() => onDelete(item.id)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
+                    <Button variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
                   </div>
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-4">

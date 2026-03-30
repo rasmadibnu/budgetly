@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { MoneyValue } from "@/components/ui/money-value";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { InvestmentFormDialog } from "@/features/investments/components/investment-form-dialog";
@@ -21,6 +22,7 @@ import { formatDate } from "@/utils/format";
 export function InvestmentsClient({ initialItems }: { initialItems: InvestmentItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InvestmentInput | undefined>();
+  const [deletingItem, setDeletingItem] = useState<InvestmentItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -64,6 +66,14 @@ export function InvestmentsClient({ initialItems }: { initialItems: InvestmentIt
         actions={<Button onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add investment</Button>}
       />
       <InvestmentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => router.refresh()} initialData={editingItem} />
+      <ConfirmDialog
+        open={Boolean(deletingItem)}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="Delete investment?"
+        description={deletingItem ? `This will permanently remove "${deletingItem.name}".` : "This investment will be removed permanently."}
+        isPending={isPending}
+        onConfirm={() => deletingItem && onDelete(deletingItem.id)}
+      />
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-5">
@@ -104,7 +114,7 @@ export function InvestmentsClient({ initialItems }: { initialItems: InvestmentIt
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
-                    <Button variant="outline" size="sm" onClick={() => onDelete(item.id)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
+                    <Button variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
                   </div>
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-3">

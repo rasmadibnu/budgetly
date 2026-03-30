@@ -60,6 +60,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       currentAmount: goal.current_amount,
       progress: goal.target_amount ? (goal.current_amount / goal.target_amount) * 100 : 0,
       remaining: Math.max(0, goal.target_amount - goal.current_amount),
+      startDate: goal.start_date,
       targetDate: goal.target_date,
       status: goal.status
     }));
@@ -93,6 +94,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   const budgetHighlights = budgetsResponse.data
     .map((budget) => ({
       id: budget.budget_id,
+      categoryId: budget.category_id,
       category: categoriesById.get(budget.category_id) ?? "Uncategorized",
       month: budget.month,
       amount: budget.budget_amount,

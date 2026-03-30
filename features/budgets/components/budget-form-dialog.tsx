@@ -19,26 +19,31 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createBudget } from "@/features/budgets/server/actions";
 import { budgetSchema, type BudgetInput } from "@/features/budgets/schemas/budget-schema";
-import type { CategoryOption } from "@/types/app";
+import type { BudgetUsageItem, CategoryOption } from "@/types/app";
 
 export function BudgetFormDialog({
   open,
   onOpenChange,
   categories,
+  existingItems,
   month,
   onSuccess
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categories: CategoryOption[];
+  existingItems: BudgetUsageItem[];
   month: string;
   onSuccess: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const availableCategories = categories.filter(
+    (category) => category.type === "expense" && !existingItems.some((item) => item.categoryId === category.id)
+  );
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      categoryId: categories.find((c) => c.type === "expense")?.id ?? "",
+      categoryId: availableCategories[0]?.id ?? "",
       month,
       amount: 0
     }
@@ -47,12 +52,12 @@ export function BudgetFormDialog({
   useEffect(() => {
     if (open) {
       form.reset({
-        categoryId: categories.find((c) => c.type === "expense")?.id ?? "",
+        categoryId: availableCategories[0]?.id ?? "",
         month,
         amount: 0
       });
     }
-  }, [open, form, categories, month]);
+  }, [open, form, availableCategories, month]);
 
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -80,11 +85,14 @@ export function BudgetFormDialog({
             <Select value={form.watch("categoryId")} onValueChange={(value) => form.setValue("categoryId", value)}>
               <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
-                {categories.filter((c) => c.type === "expense").map((category) => (
+                {availableCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {!availableCategories.length ? (
+              <p className="text-xs text-muted-foreground">All expense categories already have a budget for this month.</p>
+            ) : null}
           </div>
           <div className="space-y-1.5">
             <Label>Month</Label>
@@ -96,7 +104,7 @@ export function BudgetFormDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !availableCategories.length}>
               {isPending ? "Saving..." : "Save budget"}
             </Button>
           </DialogFooter>

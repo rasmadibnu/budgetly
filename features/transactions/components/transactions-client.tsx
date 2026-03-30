@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -36,6 +37,7 @@ export function TransactionsClient({
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<(TransactionListItem & { categoryId?: string | null }) | undefined>(undefined);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const filteredRows = useMemo(
@@ -110,7 +112,7 @@ export function TransactionsClient({
         <CardContent className="p-6">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="relative w-full md:max-w-sm">
-              <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search transactions" className="pl-10" />
             </div>
             <Badge variant="secondary">{filteredRows.length} records</Badge>
@@ -151,7 +153,7 @@ export function TransactionsClient({
                             >
                               Edit
                             </Button>
-                            <Button variant="ghost" size="icon" disabled={isPending} onClick={() => onDelete(row.id)}>
+                            <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingId(row.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -174,6 +176,14 @@ export function TransactionsClient({
       </Card>
 
       <TransactionFormDialog open={dialogOpen} onOpenChange={setDialogOpen} categories={categories} users={users} initialData={editing} />
+      <ConfirmDialog
+        open={Boolean(deletingId)}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        title="Delete transaction?"
+        description="This transaction will be removed permanently."
+        isPending={isPending}
+        onConfirm={() => deletingId && onDelete(deletingId)}
+      />
     </div>
   );
 }

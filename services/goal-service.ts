@@ -15,6 +15,7 @@ export async function getGoals() {
     currentAmount: goal.current_amount,
     progress: goal.target_amount ? (goal.current_amount / goal.target_amount) * 100 : 0,
     remaining: Math.max(0, goal.target_amount - goal.current_amount),
+    startDate: goal.start_date,
     targetDate: goal.target_date,
     status: goal.status
   }));

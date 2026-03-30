@@ -16,8 +16,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createGoal } from "@/features/goals/server/actions";
+import { createGoal, updateGoal } from "@/features/goals/server/actions";
 import { goalSchema, type GoalInput } from "@/features/goals/schemas/goal-schema";
+import type { GoalCardData } from "@/types/app";
 
 const defaults: GoalInput = {
   name: "",
@@ -31,10 +32,12 @@ const defaults: GoalInput = {
 export function GoalFormDialog({
   open,
   onOpenChange,
+  initialData,
   onSuccess
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: GoalCardData;
   onSuccess: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -45,19 +48,35 @@ export function GoalFormDialog({
 
   useEffect(() => {
     if (open) {
-      form.reset({ ...defaults, startDate: new Date().toISOString().slice(0, 10) });
+      form.reset(
+        initialData
+          ? {
+              id: initialData.id,
+              name: initialData.name,
+              targetAmount: initialData.targetAmount,
+              currentAmount: initialData.currentAmount,
+              startDate: initialData.startDate,
+              targetDate: initialData.targetDate ?? "",
+              status: initialData.status
+            }
+          : { ...defaults, startDate: new Date().toISOString().slice(0, 10) }
+      );
     }
-  }, [open, form]);
+  }, [open, form, initialData]);
 
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
       try {
-        await createGoal(values);
-        toast.success("Goal created");
+        if (values.id) {
+          await updateGoal(values);
+        } else {
+          await createGoal(values);
+        }
+        toast.success(values.id ? "Goal updated" : "Goal created");
         onOpenChange(false);
         onSuccess();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to create goal");
+        toast.error(error instanceof Error ? error.message : "Unable to save goal");
       }
     });
   });
@@ -66,10 +85,11 @@ export function GoalFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a new goal</DialogTitle>
+          <DialogTitle>{initialData ? "Edit goal" : "Add a new goal"}</DialogTitle>
           <DialogDescription>Create a focused savings target with a deadline.</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
+          <input type="hidden" {...form.register("id")} />
           <div className="space-y-1.5">
             <Label>Name</Label>
             <Input {...form.register("name")} placeholder="Emergency fund" />
@@ -97,7 +117,7 @@ export function GoalFormDialog({
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Create goal"}
+              {isPending ? "Saving..." : initialData ? "Update goal" : "Create goal"}
             </Button>
           </DialogFooter>
         </form>
