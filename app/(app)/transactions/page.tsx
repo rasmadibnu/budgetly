@@ -1,0 +1,28 @@
+import { getCategories } from "@/services/category-service";
+import { getTransactions } from "@/services/transaction-service";
+import { getHouseholdUsers } from "@/services/user-service";
+import { TransactionsClient } from "@/features/transactions/components/transactions-client";
+import { normalizeMonthKey } from "@/utils/date";
+
+export default async function TransactionsPage({
+  searchParams
+}: {
+  searchParams?: { month?: string };
+}) {
+  const month = normalizeMonthKey(searchParams?.month);
+  const [{ rows, summary }, categories, users] = await Promise.all([
+    getTransactions({ month }),
+    getCategories(),
+    getHouseholdUsers()
+  ]);
+
+  return (
+    <TransactionsClient
+      initialRows={rows}
+      summary={summary}
+      categories={categories.map((category) => ({ id: category.id, name: category.name, type: category.type, color: category.color }))}
+      users={users}
+      initialMonth={month}
+    />
+  );
+}
