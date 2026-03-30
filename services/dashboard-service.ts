@@ -21,9 +21,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   ] = await Promise.all([
     supabase
       .from("transactions")
-      .select("id, user_id, type, amount, description, date, payment_method, attachment_url, category_id")
+      .select("id, user_id, type, amount, description, date, created_at, payment_method, attachment_url, category_id")
       .eq("household_id", householdId)
-      .order("date", { ascending: false }),
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false }),
     supabase.from("transaction_categories").select("id, name").eq("household_id", householdId),
     supabase.from("goals").select("*").eq("household_id", householdId).order("target_date", { ascending: true }),
     supabase.from("budget_usage").select("*").eq("household_id", householdId).eq("month", month),
@@ -62,6 +63,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       remaining: Math.max(0, goal.target_amount - goal.current_amount),
       startDate: goal.start_date,
       targetDate: goal.target_date,
+      updatedAt: goal.updated_at,
       status: goal.status
     }));
 
@@ -120,6 +122,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       category: categoriesById.get(transaction.category_id ?? "") ?? "Uncategorized",
       description: transaction.description,
       date: transaction.date,
+      createdAt: transaction.created_at,
       paymentMethod: transaction.payment_method,
       attachmentUrl: transaction.attachment_url
     })),

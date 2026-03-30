@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Download, FileArchive, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
@@ -48,6 +49,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<CategoryOption | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -68,6 +70,10 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
     });
   };
 
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
   const submit = form.handleSubmit((values) => {
     const optimisticId = values.id ?? crypto.randomUUID();
     const optimistic = {
@@ -85,6 +91,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
         await upsertCategory(values);
         toast.success(values.id ? "Category updated" : "Category created");
         resetCategoryForm();
+        router.refresh();
       } catch (error) {
         setLocalCategories(previous);
         toast.error(error instanceof Error ? error.message : "Unable to save category");

@@ -2,6 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -43,6 +44,7 @@ export function GoalFormDialog({
   onSuccess: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<GoalInput>({
     resolver: zodResolver(goalSchema),
     defaultValues: defaults
@@ -77,6 +79,7 @@ export function GoalFormDialog({
         toast.success(values.id ? "Goal updated" : "Goal created");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save goal");
       }

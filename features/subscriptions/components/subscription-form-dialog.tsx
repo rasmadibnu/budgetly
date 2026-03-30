@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CategoryQuickCreateDialog } from "@/features/categories/components/category-quick-create-dialog";
 
 const defaults: SubscriptionInput = {
   name: "",
@@ -43,6 +45,9 @@ export function SubscriptionFormDialog({
   categories: CategoryOption[];
 }) {
   const [isPending, startTransition] = useTransition();
+  const [localCategories, setLocalCategories] = useState(categories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const router = useRouter();
   const form = useForm<SubscriptionInput>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: defaults
@@ -51,6 +56,10 @@ export function SubscriptionFormDialog({
   useEffect(() => {
     if (open) form.reset(initialData ?? defaults);
   }, [form, initialData, open]);
+
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
 
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -63,6 +72,7 @@ export function SubscriptionFormDialog({
         toast.success(values.id ? "Subscription updated" : "Subscription added");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save subscription");
       }
@@ -100,12 +110,17 @@ export function SubscriptionFormDialog({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Expense category</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Expense category</Label>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)}>
+                  Add category
+                </Button>
+              </div>
               <Select value={form.watch("categoryId") || "__none"} onValueChange={(value) => form.setValue("categoryId", value === "__none" ? "" : value)}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">No category</SelectItem>
-                  {categories.map((category) => (
+                  {localCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -139,6 +154,15 @@ export function SubscriptionFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+      <CategoryQuickCreateDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        type="expense"
+        onCreated={(category) => {
+          setLocalCategories((current) => [category, ...current.filter((item) => item.id !== category.id)]);
+          form.setValue("categoryId", category.id, { shouldDirty: true, shouldValidate: true });
+        }}
+      />
     </Dialog>
   );
 }

@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { GoalFormDialog } from "@/features/goals/components/goal-form-dialog";
 import { completeGoal, deleteGoal } from "@/features/goals/server/actions";
 import type { GoalCardData } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatDateTime } from "@/utils/format";
 
 function getGoalCountdown(targetDate: string | null) {
   if (!targetDate) return "Flexible target";
@@ -105,6 +105,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                       {getGoalCountdown(goal.targetDate)}
                       {goal.targetDate ? ` · ${formatDate(goal.targetDate)}` : ""}
                     </p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">Last updated · {formatDateTime(goal.updatedAt)}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button

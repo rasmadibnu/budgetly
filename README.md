@@ -36,17 +36,6 @@ The app is designed for a shared household workflow with internal database-backe
 - Framer Motion
 - Supabase PostgreSQL
 
-## Authentication
-
-This project does not use Supabase Auth for login.
-
-Authentication is handled by internal database tables and a signed session cookie:
-
-- login supports email or username
-- passwords are stored in the application database
-- session cookie name: `budgetly_session`
-- protected routes are enforced by middleware
-
 ## Project Structure
 
 ```text
@@ -69,8 +58,7 @@ Copy `.env.example` to `.env.local` and fill in the values:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-AUTH_SESSION_SECRET=
-AI_API_BASE_URL=https://ai.rasmadibnu.com
+AI_API_BASE_URL=
 AI_API_KEY=
 AI_MODEL=gemini-3-flash
 APP_HOUSEHOLD_NAME=Budgetly Household
@@ -79,7 +67,6 @@ APP_HOUSEHOLD_NAME=Budgetly Household
 ### Notes
 
 - `SUPABASE_SERVICE_ROLE_KEY` is required because server-side data access uses the service role.
-- `AUTH_SESSION_SECRET` is required for signing the internal session cookie.
 - `AI_API_BASE_URL`, `AI_API_KEY`, and `AI_MODEL` are used for the monthly AI report.
 
 ## Local Development
@@ -136,7 +123,6 @@ The seed creates sample household data for internal users and finance modules. I
 - income and expense records
 - search
 - CSV export
-- payment method dropdown
 - add and edit in dialog or mobile sheet
 
 ### Goals
@@ -195,7 +181,6 @@ For Cloudflare or other hosted environments, make sure these values are configur
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `AUTH_SESSION_SECRET`
 - `AI_API_BASE_URL`
 - `AI_API_KEY`
 - `AI_MODEL`

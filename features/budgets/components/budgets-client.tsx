@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,6 +29,10 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
   const [deletingBudget, setDeletingBudget] = useState<BudgetUsageItem | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   const onDelete = (id: string) => {
     const previous = items;

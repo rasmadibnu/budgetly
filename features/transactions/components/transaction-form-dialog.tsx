@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CategoryQuickCreateDialog } from "@/features/categories/components/category-quick-create-dialog";
 import { transactionSchema, type TransactionInput } from "@/features/transactions/schemas/transaction-schema";
 import { createTransaction, updateTransaction } from "@/features/transactions/server/actions";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
@@ -40,15 +42,20 @@ export function TransactionFormDialog({
   open,
   onOpenChange,
   categories,
-  initialData
+  initialData,
+  onSuccess
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categories: CategoryOption[];
   users?: UserProfile[];
   initialData?: TransactionListItem & { categoryId?: string | null };
+  onSuccess?: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [localCategories, setLocalCategories] = useState(categories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const router = useRouter();
   const form = useForm<TransactionInput>({
     resolver: zodResolver(transactionSchema),
     defaultValues: initialData
@@ -86,6 +93,10 @@ export function TransactionFormDialog({
     );
   }, [form, initialData, open]);
 
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
   const selectedType = form.watch("type");
 
   const submit = form.handleSubmit((values) => {
@@ -98,6 +109,8 @@ export function TransactionFormDialog({
         }
         toast.success(values.id ? "Transaction updated" : "Transaction created");
         onOpenChange(false);
+        onSuccess?.();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save transaction.");
       }
@@ -129,7 +142,12 @@ export function TransactionFormDialog({
             <AmountInput id="amount" value={form.watch("amount")} onValueChange={(value) => form.setValue("amount", value)} />
           </div>
           <div className="space-y-2">
-            <Label>Category</Label>
+            <div className="flex min-h-8 items-center justify-between gap-2">
+              <Label>Category</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)}>
+                Add category
+              </Button>
+            </div>
             <Select
               value={form.watch("categoryId") ?? undefined}
               onValueChange={(value) => form.setValue("categoryId", value === "none" ? null : value)}
@@ -139,7 +157,7 @@ export function TransactionFormDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Uncategorized</SelectItem>
-                {categories
+                {localCategories
                   .filter((category) => category.type === selectedType)
                   .map((category) => (
                     <SelectItem key={category.id} value={category.id}>
@@ -150,7 +168,9 @@ export function TransactionFormDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <div className="flex min-h-8 items-center">
+              <Label htmlFor="date">Date</Label>
+            </div>
             <DatePickerField id="date" value={form.watch("date")} onChange={(value) => form.setValue("date", value)} />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -167,6 +187,15 @@ export function TransactionFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+      <CategoryQuickCreateDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        type={selectedType}
+        onCreated={(category) => {
+          setLocalCategories((current) => [category, ...current.filter((item) => item.id !== category.id)]);
+          form.setValue("categoryId", category.id, { shouldDirty: true, shouldValidate: true });
+        }}
+      />
     </Dialog>
   );
 }

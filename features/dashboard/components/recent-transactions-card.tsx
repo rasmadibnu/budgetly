@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/money-value";
 import type { TransactionListItem } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDateTime } from "@/utils/format";
 
 export function RecentTransactionsCard({ transactions }: { transactions: TransactionListItem[] }) {
   return (
@@ -28,7 +28,7 @@ export function RecentTransactionsCard({ transactions }: { transactions: Transac
             <div className="text-right">
               <MoneyValue value={transaction.amount} className="font-semibold" />
               <div className="mt-1 flex items-center justify-end gap-2">
-                <Badge variant="outline">{formatDate(transaction.date)}</Badge>
+                <Badge variant="outline">{formatDateTime(transaction.createdAt)}</Badge>
               </div>
             </div>
           </div>

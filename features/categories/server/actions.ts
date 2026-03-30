@@ -10,19 +10,25 @@ export async function upsertCategory(input: CategoryInput) {
   const parsed = categorySchema.parse(input);
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("transaction_categories").upsert({
-    id: parsed.id,
-    household_id: householdId,
-    name: parsed.name,
-    type: parsed.type,
-    color: parsed.color,
-    icon: parsed.icon ?? null
-  });
+  const { data, error } = await supabase
+    .from("transaction_categories")
+    .upsert({
+      id: parsed.id,
+      household_id: householdId,
+      name: parsed.name,
+      type: parsed.type,
+      color: parsed.color,
+      icon: parsed.icon ?? null
+    })
+    .select("id, name, type, color")
+    .single();
 
   if (error) throw error;
   revalidatePath("/settings");
   revalidatePath("/transactions");
   revalidatePath("/budgets");
+  revalidatePath("/subscriptions");
+  return data;
 }
 
 export async function deleteCategory(id: string) {

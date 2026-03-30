@@ -17,6 +17,7 @@ export async function getGoals() {
     remaining: Math.max(0, goal.target_amount - goal.current_amount),
     startDate: goal.start_date,
     targetDate: goal.target_date,
+    updatedAt: goal.updated_at,
     status: goal.status
   }));
 }

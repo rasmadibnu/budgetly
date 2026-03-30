@@ -2,6 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -50,6 +51,7 @@ export function InvestmentFormDialog({
   initialData?: InvestmentInput;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<InvestmentInput>({
     resolver: zodResolver(investmentSchema),
     defaultValues: defaults
@@ -70,6 +72,7 @@ export function InvestmentFormDialog({
         toast.success(values.id ? "Investment updated" : "Investment added");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save investment");
       }

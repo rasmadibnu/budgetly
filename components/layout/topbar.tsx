@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Eye, EyeOff, LogOut, Menu, Moon, Plus, Sun, WifiOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, WifiOff } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -64,6 +64,8 @@ export function Topbar({ username, categories }: { username: string; categories:
   const month = normalizeMonthKey(searchParams.get("month"));
   const amountsVisible = useBudgetlyStore((state) => state.amountsVisible);
   const toggleAmountsVisible = useBudgetlyStore((state) => state.toggleAmountsVisible);
+  const sidebarCollapsed = useBudgetlyStore((state) => state.sidebarCollapsed);
+  const toggleSidebarCollapsed = useBudgetlyStore((state) => state.toggleSidebarCollapsed);
   const monthOptions = useMemo(getMonthOptions, []);
 
   const onMonthChange = (value: string) => {
@@ -78,7 +80,7 @@ export function Topbar({ username, categories }: { username: string; categories:
   };
 
   return (
-    <header className="shrink-0 border-b px-4 py-3 sm:px-6 lg:px-8">
+    <header className="shrink-0 border-b px-4 sm:px-6 lg:px-8">
       <TransactionFormDialog open={transactionOpen} onOpenChange={setTransactionOpen} categories={categories} />
       {isMobile ? (
         <Sheet open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
@@ -130,8 +132,8 @@ export function Topbar({ username, categories }: { username: string; categories:
           </DialogContent>
         </Dialog>
       )}
-      <div className="flex flex-col gap-0 md:flex-row md:items-center md:justify-between md:gap-3">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex min-h-14 flex-col gap-0 md:flex-row md:items-center md:justify-between md:gap-3">
+        <div className="flex min-h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sheet open={tabletNavOpen} onOpenChange={setTabletNavOpen}>
               <SheetTrigger asChild>
@@ -185,6 +187,15 @@ export function Topbar({ username, categories }: { username: string; categories:
               </Button>
             </div>
             <div className="hidden min-w-0 items-center gap-1 sm:gap-1.5 lg:flex">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={toggleSidebarCollapsed}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

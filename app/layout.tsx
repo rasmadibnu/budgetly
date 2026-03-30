@@ -13,7 +13,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Budgetly",
-  description: "Private family finance workspace for a two-person household."
+  description: "Private family finance workspace for a two-person household.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

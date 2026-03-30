@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { Download, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +17,24 @@ import { MoneyValue } from "@/components/ui/money-value";
 import { deleteTransaction } from "@/features/transactions/server/actions";
 import { TransactionFormDialog } from "@/features/transactions/components/transaction-form-dialog";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDateTime } from "@/utils/format";
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.replace("#", "");
+  const value = normalized.length === 3
+    ? normalized.split("").map((char) => char + char).join("")
+    : normalized;
+
+  const red = Number.parseInt(value.slice(0, 2), 16);
+  const green = Number.parseInt(value.slice(2, 4), 16);
+  const blue = Number.parseInt(value.slice(4, 6), 16);
+
+  if ([red, green, blue].some((part) => Number.isNaN(part))) {
+    return undefined;
+  }
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
 
 export function TransactionsClient({
   initialRows,
@@ -40,10 +57,15 @@ export function TransactionsClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setRows(initialRows);
+  }, [initialRows]);
+
   const filteredRows = useMemo(
     () => rows.filter((row) => `${row.category} ${row.description ?? ""} ${row.userName}`.toLowerCase().includes(search.toLowerCase())),
     [rows, search]
   );
+  const categoryColors = useMemo(() => new Map(categories.map((category) => [category.id, category.color])), [categories]);
 
   const pageSize = 8;
   const paginatedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
@@ -52,7 +74,7 @@ export function TransactionsClient({
   const exportCsv = async () => {
     const headers = ["Date,User,Type,Category,Description,Amount"];
     const lines = filteredRows.map((row) =>
-      [row.date, row.userName, row.type, row.category, row.description ?? "", row.amount].join(",")
+      [row.createdAt, row.userName, row.type, row.category, row.description ?? "", row.amount].join(",")
     );
     const blob = new Blob([[...headers, ...lines].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -125,7 +147,7 @@ export function TransactionsClient({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
+                      <TableHead>Date & Time</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
@@ -136,9 +158,24 @@ export function TransactionsClient({
                   <TableBody>
                     {paginatedRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell>{formatDate(row.date)}</TableCell>
+                        <TableCell>{formatDateTime(row.createdAt)}</TableCell>
                         <TableCell>{row.userName}</TableCell>
-                        <TableCell><Badge variant="outline">{row.category}</Badge></TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="border-transparent"
+                            style={{
+                              backgroundColor: row.categoryId ? hexToRgba(categoryColors.get(row.categoryId) ?? "", 0.14) : undefined,
+                              color: row.categoryId ? categoryColors.get(row.categoryId) ?? undefined : undefined
+                            }}
+                          >
+                            <span
+                              className="mr-1.5 h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: row.categoryId ? categoryColors.get(row.categoryId) ?? "#94a3b8" : "#94a3b8" }}
+                            />
+                            {row.category}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{row.description ?? "No description"}</TableCell>
                         <TableCell className={row.type === "income" ? "text-success" : ""}><MoneyValue value={row.amount} /></TableCell>
                         <TableCell className="text-right">
@@ -175,7 +212,17 @@ export function TransactionsClient({
         </CardContent>
       </Card>
 
-      <TransactionFormDialog open={dialogOpen} onOpenChange={setDialogOpen} categories={categories} users={users} initialData={editing} />
+      <TransactionFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        categories={categories}
+        users={users}
+        initialData={editing}
+        onSuccess={() => {
+          setEditing(undefined);
+          setPage(1);
+        }}
+      />
       <ConfirmDialog
         open={Boolean(deletingId)}
         onOpenChange={(open) => !open && setDeletingId(null)}

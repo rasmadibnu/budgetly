@@ -27,6 +27,18 @@ export function formatDate(value: string | Date, options?: Intl.DateTimeFormatOp
   }).format(typeof value === "string" ? new Date(value) : value);
 }
 
+export function formatDateTime(value: string | Date, options?: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    ...options
+  }).format(typeof value === "string" ? new Date(value) : value);
+}
+
 export function formatMonthLabel(value: string | Date) {
   return new Intl.DateTimeFormat("id-ID", {
     timeZone: "Asia/Jakarta",

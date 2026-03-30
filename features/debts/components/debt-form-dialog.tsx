@@ -2,6 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ export function DebtFormDialog({
   initialData?: DebtInput;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<DebtInput>({
     resolver: zodResolver(debtSchema),
     defaultValues: defaults
@@ -59,6 +61,7 @@ export function DebtFormDialog({
         toast.success(values.id ? "Record updated" : "Record created");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save record");
       }

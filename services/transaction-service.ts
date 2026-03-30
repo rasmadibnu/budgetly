@@ -24,13 +24,14 @@ export async function getTransactions(filters: TransactionFilters = {}) {
 
   let query = supabase
     .from("transactions")
-    .select("id, user_id, type, amount, description, date, payment_method, attachment_url, category_id", {
+    .select("id, user_id, type, amount, description, date, created_at, payment_method, attachment_url, category_id", {
       count: "exact"
     })
     .eq("household_id", householdId)
     .gte("date", start.toISOString().slice(0, 10))
     .lte("date", end.toISOString().slice(0, 10))
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (filters.type) query = query.eq("type", filters.type as "income" | "expense");
   if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
@@ -57,6 +58,7 @@ export async function getTransactions(filters: TransactionFilters = {}) {
     category: categoriesById.get(transaction.category_id ?? "") ?? "Uncategorized",
     description: transaction.description,
     date: transaction.date,
+    createdAt: transaction.created_at,
     paymentMethod: transaction.payment_method,
     attachmentUrl: transaction.attachment_url
   }));

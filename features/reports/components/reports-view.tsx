@@ -137,7 +137,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                 <div className="rounded-2xl border border-border bg-muted/25 p-5">
                   <div className="mb-3 flex items-center gap-2">
                     <Bot className="h-4 w-4 text-primary" />
-                    <p className="font-medium">AI overview</p>
+                    <p className="font-medium">🧠 AI overview</p>
                   </div>
                   <p className="text-sm leading-7 text-muted-foreground">
                     {report.summary.aiReport?.overview ?? "No AI narrative is stored for this month yet. Generate the report again after configuring the AI API key."}
@@ -146,7 +146,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
 
                 <div className="grid gap-4 xl:grid-cols-3">
                   <Card>
-                    <CardHeader><CardTitle className="text-base">Insights</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base">💡 Insights</CardTitle></CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                       {(report.summary.aiReport?.insights ?? []).map((item, index) => (
                         <div key={`${item}-${index}`} className="rounded-xl bg-muted/35 p-3">{item}</div>
@@ -154,7 +154,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle className="text-base">Risks</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base">⚠️ Risks</CardTitle></CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                       {(report.summary.aiReport?.risks ?? []).map((item, index) => (
                         <div key={`${item}-${index}`} className="rounded-xl bg-muted/35 p-3">{item}</div>
@@ -162,7 +162,7 @@ export function ReportsView({ initialReport, month }: { initialReport: MonthlyRe
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle className="text-base">Actions</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base">✅ Actions</CardTitle></CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                       {(report.summary.aiReport?.actions ?? []).map((item, index) => (
                         <div key={`${item}-${index}`} className="rounded-xl bg-muted/35 p-3">{item}</div>

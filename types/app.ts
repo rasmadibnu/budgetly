@@ -33,6 +33,7 @@ export interface TransactionListItem {
   category: string;
   description: string | null;
   date: string;
+  createdAt: string;
   paymentMethod: string | null;
   attachmentUrl: string | null;
 }
@@ -46,6 +47,7 @@ export interface GoalCardData {
   remaining: number;
   startDate: string;
   targetDate: string | null;
+  updatedAt: string;
   status: GoalStatus;
 }
 

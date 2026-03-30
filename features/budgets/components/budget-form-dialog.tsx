@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryQuickCreateDialog } from "@/features/categories/components/category-quick-create-dialog";
 import { createBudget } from "@/features/budgets/server/actions";
 import { budgetSchema, type BudgetInput } from "@/features/budgets/schemas/budget-schema";
 import type { BudgetUsageItem, CategoryOption } from "@/types/app";
@@ -38,8 +40,15 @@ export function BudgetFormDialog({
   onSuccess: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const availableCategories = categories.filter(
-    (category) => category.type === "expense" && !existingItems.some((item) => item.categoryId === category.id)
+  const [localCategories, setLocalCategories] = useState(categories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const router = useRouter();
+  const availableCategories = useMemo(
+    () =>
+      localCategories.filter(
+        (category) => category.type === "expense" && !existingItems.some((item) => item.categoryId === category.id)
+      ),
+    [existingItems, localCategories]
   );
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
@@ -60,6 +69,10 @@ export function BudgetFormDialog({
     }
   }, [open, form, availableCategories, month]);
 
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
       try {
@@ -67,6 +80,7 @@ export function BudgetFormDialog({
         toast.success("Budget created");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to create budget");
       }
@@ -82,7 +96,12 @@ export function BudgetFormDialog({
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-1.5">
-            <Label>Expense category</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Expense category</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)}>
+                Add category
+              </Button>
+            </div>
             <Select value={form.watch("categoryId")} onValueChange={(value) => form.setValue("categoryId", value)}>
               <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
@@ -111,6 +130,15 @@ export function BudgetFormDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+      <CategoryQuickCreateDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        type="expense"
+        onCreated={(category) => {
+          setLocalCategories((current) => [category, ...current.filter((item) => item.id !== category.id)]);
+          form.setValue("categoryId", category.id, { shouldDirty: true, shouldValidate: true });
+        }}
+      />
     </Dialog>
   );
 }

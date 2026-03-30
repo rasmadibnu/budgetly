@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config "../tailwind.config.ts";
+@import "tailwindcss";
 
 :root {
   --font-sans: "Inter";
@@ -94,7 +93,7 @@
 
 @layer components {
   .surface {
-    @apply rounded-xl border bg-card shadow-sm;
+    @apply rounded-xl border bg-card;
   }
 
   .section-heading {
@@ -102,6 +101,6 @@
   }
 
   .saas-panel {
-    @apply rounded-xl border bg-card shadow-sm;
+    @apply rounded-xl border bg-card;
   }
 }

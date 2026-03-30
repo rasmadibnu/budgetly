@@ -2,6 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -45,6 +46,7 @@ export function InvoiceFormDialog({
   initialData?: InvoiceInput;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const form = useForm<InvoiceInput>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: defaults
@@ -68,6 +70,7 @@ export function InvoiceFormDialog({
         toast.success(values.id ? "Invoice updated" : "Invoice created");
         onOpenChange(false);
         onSuccess();
+        router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to save invoice");
       }
