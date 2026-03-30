@@ -16,7 +16,7 @@ import { InvoiceFormDialog } from "@/features/invoices/components/invoice-form-d
 import { deleteInvoice, updateInvoicePaymentStatus } from "@/features/invoices/server/actions";
 import type { InvoiceInput } from "@/features/invoices/schemas/invoice-schema";
 import type { InvoiceItem } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatStatusLabel } from "@/utils/format";
 
 export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,7 +29,7 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
     startTransition(async () => {
       try {
         await updateInvoicePaymentStatus(invoice.id, status);
-        toast.success(`Invoice marked as ${status}`);
+        toast.success(`Invoice marked as ${formatStatusLabel(status)}`);
         router.refresh();
       } catch {
         toast.error("Unable to update invoice status");
@@ -132,7 +132,7 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold">{invoice.name}</h3>
                     <Badge variant={invoice.status === "paid" ? "success" : "secondary"}>
-                      {invoice.status}
+                      {formatStatusLabel(invoice.status)}
                     </Badge>
                   </div>
                   <p className="mt-1 text-[12px] text-muted-foreground">

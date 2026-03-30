@@ -16,7 +16,7 @@ import { SubscriptionFormDialog } from "@/features/subscriptions/components/subs
 import { deleteSubscription, setSubscriptionCycleStatus } from "@/features/subscriptions/server/actions";
 import type { SubscriptionInput } from "@/features/subscriptions/schemas/subscription-schema";
 import type { CategoryOption, SubscriptionItem } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatStatusLabel } from "@/utils/format";
 
 export function SubscriptionsClient({
   initialItems,
@@ -65,7 +65,7 @@ export function SubscriptionsClient({
     startTransition(async () => {
       try {
         await setSubscriptionCycleStatus(subscriptionId, month, status);
-        toast.success(`Subscription marked ${status}`);
+        toast.success(`Subscription marked ${formatStatusLabel(status)}`);
         router.refresh();
       } catch {
         toast.error("Unable to update payment status");
@@ -130,9 +130,9 @@ export function SubscriptionsClient({
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold">{item.name}</h3>
-                      <Badge variant={item.status === "active" ? "success" : "secondary"}>{item.status}</Badge>
+                      <Badge variant={item.status === "active" ? "success" : "secondary"}>{formatStatusLabel(item.status)}</Badge>
                       <Badge variant={item.cycle.status === "paid" ? "success" : item.cycle.status === "overdue" ? "danger" : "outline"}>
-                        {item.cycle.status}
+                        {formatStatusLabel(item.cycle.status)}
                       </Badge>
                     </div>
                     <p className="mt-1 text-[12px] text-muted-foreground">

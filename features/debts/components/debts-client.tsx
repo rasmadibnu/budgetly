@@ -16,7 +16,7 @@ import { DebtFormDialog } from "@/features/debts/components/debt-form-dialog";
 import { deleteDebtReceivable } from "@/features/debts/server/actions";
 import type { DebtInput } from "@/features/debts/schemas/debt-schema";
 import type { DebtReceivableItem } from "@/types/app";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatStatusLabel } from "@/utils/format";
 
 export function DebtsClient({ initialItems }: { initialItems: DebtReceivableItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,8 +109,8 @@ export function DebtsClient({ initialItems }: { initialItems: DebtReceivableItem
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold">{item.name}</h3>
-                      <Badge variant={item.direction === "receivable" ? "success" : "secondary"}>{item.direction}</Badge>
-                      <Badge variant={item.status === "settled" ? "success" : "outline"}>{item.status}</Badge>
+                      <Badge variant={item.direction === "receivable" ? "success" : "secondary"}>{formatStatusLabel(item.direction)}</Badge>
+                      <Badge variant={item.status === "settled" ? "success" : "outline"}>{formatStatusLabel(item.status)}</Badge>
                     </div>
                     <p className="mt-1 text-[12px] text-muted-foreground">
                       {item.counterparty} {item.dueDate ? `· Due ${formatDate(item.dueDate)}` : ""}

@@ -17,7 +17,7 @@ import { deleteInvestment } from "@/features/investments/server/actions";
 import type { InvestmentInput } from "@/features/investments/schemas/investment-schema";
 import type { InvestmentItem } from "@/types/app";
 import { cn } from "@/utils/cn";
-import { formatDate } from "@/utils/format";
+import { formatDate, formatStatusLabel } from "@/utils/format";
 
 export function InvestmentsClient({ initialItems }: { initialItems: InvestmentItem[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,7 +105,7 @@ export function InvestmentsClient({ initialItems }: { initialItems: InvestmentIt
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold">{item.name}</h3>
-                      <Badge variant={item.status === "active" ? "success" : "secondary"}>{item.status}</Badge>
+                      <Badge variant={item.status === "active" ? "success" : "secondary"}>{formatStatusLabel(item.status)}</Badge>
                     </div>
                     <p className="mt-1 text-[12px] text-muted-foreground">
                       {item.type}{item.platform ? ` · ${item.platform}` : ""} · Started {formatDate(item.startedAt)}
