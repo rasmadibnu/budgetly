@@ -76,7 +76,7 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
         title="🧾 Client invoices"
         description="Track invoices issued to your clients and mark each one as paid or unpaid."
         actions={
-          <Button onClick={() => {
+          <Button className="w-full sm:w-auto" onClick={() => {
             setEditingInvoice(undefined);
             setDialogOpen(true);
           }}>
@@ -140,21 +140,21 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
                   </p>
                   {invoice.notes ? <p className="mt-1 text-[12px] text-muted-foreground">{invoice.notes}</p> : null}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <MoneyValue value={invoice.amount} className="text-sm font-semibold" />
-                  <Button variant="outline" size="sm" onClick={() => onEdit(invoice)} disabled={isPending}>
+                  <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => onEdit(invoice)} disabled={isPending}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit
                   </Button>
-                  <Button variant={invoice.status === "paid" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus(invoice, "paid")} disabled={invoice.status === "paid" || isPending}>
+                  <Button className="w-full sm:w-auto" variant={invoice.status === "paid" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus(invoice, "paid")} disabled={invoice.status === "paid" || isPending}>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
                     Paid
                   </Button>
-                  <Button variant={invoice.status === "unpaid" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus(invoice, "unpaid")} disabled={invoice.status === "unpaid" || isPending}>
+                  <Button className="w-full sm:w-auto" variant={invoice.status === "unpaid" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus(invoice, "unpaid")} disabled={invoice.status === "unpaid" || isPending}>
                     <CircleDashed className="mr-2 h-4 w-4" />
                     Unpaid
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setDeletingInvoice(invoice)} disabled={isPending}>
+                  <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setDeletingInvoice(invoice)} disabled={isPending}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </Button>

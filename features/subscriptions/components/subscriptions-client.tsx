@@ -86,7 +86,7 @@ export function SubscriptionsClient({
         eyebrow="Subscriptions"
         title="🔁 Recurring services with monthly payable state"
         description="Each active subscription generates a monthly expense cycle that can stay unpaid or be marked paid."
-        actions={<Button onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add subscription</Button>}
+        actions={<Button className="w-full sm:w-auto" onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add subscription</Button>}
       />
       <SubscriptionFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => router.refresh()} initialData={editingItem} categories={categories} />
       <ConfirmDialog
@@ -140,11 +140,11 @@ export function SubscriptionsClient({
                     </p>
                     {item.notes ? <p className="mt-1 text-[12px] text-muted-foreground">{item.notes}</p> : null}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
-                    <Button variant={item.cycle.status === "paid" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "paid")} disabled={item.status !== "active" || item.cycle.status === "paid" || isPending}><CheckCircle2 className="mr-2 h-4 w-4" />Paid</Button>
-                    <Button variant={item.cycle.status === "unpaid" || item.cycle.status === "overdue" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "unpaid")} disabled={item.status !== "active" || (item.cycle.status !== "paid" && item.cycle.linkedTransactionId === null) || isPending}><CircleDashed className="mr-2 h-4 w-4" />Unpaid</Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
+                    <Button className="w-full sm:w-auto" variant={item.cycle.status === "paid" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "paid")} disabled={item.status !== "active" || item.cycle.status === "paid" || isPending}><CheckCircle2 className="mr-2 h-4 w-4" />Paid</Button>
+                    <Button className="w-full sm:w-auto" variant={item.cycle.status === "unpaid" || item.cycle.status === "overdue" ? "secondary" : "outline"} size="sm" onClick={() => setStatus(item.id, "unpaid")} disabled={item.status !== "active" || (item.cycle.status !== "paid" && item.cycle.linkedTransactionId === null) || isPending}><CircleDashed className="mr-2 h-4 w-4" />Unpaid</Button>
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
                   </div>
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-3">

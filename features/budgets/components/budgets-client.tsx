@@ -56,7 +56,7 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
         title="🧾 Category-based monthly limits"
         description="Set category guardrails and see the percentage used update automatically from transactions."
         actions={
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button className="w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add budget
           </Button>
@@ -68,7 +68,10 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
         categories={categories}
         existingItems={items}
         month={month}
-        onSuccess={() => router.refresh()}
+        onSuccess={(item) => {
+          setItems((current) => [item, ...current]);
+          router.refresh();
+        }}
       />
       <ConfirmDialog
         open={Boolean(deletingBudget)}
@@ -85,12 +88,12 @@ export function BudgetsClient({ initialItems, categories, month }: { initialItem
           items.map((item) => (
             <Card key={item.id}>
               <CardContent className="space-y-4 p-5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-semibold">{item.category}</h3>
                     <p className="text-[12px] text-muted-foreground">{item.month}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <p className={`text-lg font-semibold ${getBudgetTone(item.percentage)}`}>{formatPercentage(item.percentage)}</p>
                     <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingBudget(item)} aria-label={`Delete ${item.category} budget`}>
                       <Trash2 className="h-4 w-4" />

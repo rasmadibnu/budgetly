@@ -71,7 +71,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
         title="🎯 Savings targets for the family"
         description="Track longer-term priorities like an emergency fund, travel, or big purchases."
         actions={
-          <Button onClick={() => { setEditing(undefined); setDialogOpen(true); }}>
+          <Button className="w-full sm:w-auto" onClick={() => { setEditing(undefined); setDialogOpen(true); }}>
             <Plus className="mr-2 h-4 w-4" />
             Add goal
           </Button>
@@ -107,8 +107,9 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                     </p>
                     <p className="mt-1 text-[12px] text-muted-foreground">Last updated · {formatDateTime(goal.updatedAt)}</p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                     <Button
+                      className="w-full sm:w-auto"
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -120,6 +121,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                       Edit
                     </Button>
                     <Button
+                      className="w-full sm:w-auto"
                       variant={goal.status === "completed" ? "secondary" : "outline"}
                       size="sm"
                       onClick={() => markCompleted(goal.id)}
@@ -127,7 +129,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                     >
                       {goal.status === "completed" ? "Completed" : "Mark completed"}
                     </Button>
-                    <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingGoal(goal)} aria-label={`Delete ${goal.name}`}>
+                    <Button className="w-full sm:w-9" variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingGoal(goal)} aria-label={`Delete ${goal.name}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

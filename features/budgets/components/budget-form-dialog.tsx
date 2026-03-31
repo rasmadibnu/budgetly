@@ -37,7 +37,7 @@ export function BudgetFormDialog({
   categories: CategoryOption[];
   existingItems: BudgetUsageItem[];
   month: string;
-  onSuccess: () => void;
+  onSuccess: (item: BudgetUsageItem) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [localCategories, setLocalCategories] = useState(categories);
@@ -76,10 +76,14 @@ export function BudgetFormDialog({
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
       try {
-        await createBudget(values);
+        const createdBudget = await createBudget(values);
+        const selectedCategory = localCategories.find((category) => category.id === createdBudget.categoryId);
         toast.success("Budget created");
         onOpenChange(false);
-        onSuccess();
+        onSuccess({
+          ...createdBudget,
+          category: selectedCategory?.name ?? createdBudget.category
+        });
         router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Unable to create budget");

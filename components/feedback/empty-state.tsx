@@ -20,7 +20,7 @@ export function EmptyState({
       </CardHeader>
       {actionLabel && onAction ? (
         <CardContent>
-          <Button onClick={onAction}>{actionLabel}</Button>
+          <Button onClick={onAction} className="w-full sm:w-auto">{actionLabel}</Button>
         </CardContent>
       ) : null}
     </Card>

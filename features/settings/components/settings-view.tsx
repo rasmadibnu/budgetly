@@ -201,17 +201,17 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       </div>
       <div className="grid gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Category list</CardTitle>
               <CardDescription>Master data for all household income and expense classifications.</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={startCreate}>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <Button className="w-full sm:w-auto" onClick={startCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add category
               </Button>
-              <Button type="button" variant="outline" onClick={exportBackup} disabled={isPending}>
+              <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={exportBackup} disabled={isPending}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
@@ -236,12 +236,12 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                       <span className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: category.color }} />
                       <span className="font-mono text-xs text-muted-foreground">{category.color}</span>
                     </div>
-                    <div className="mt-4 flex justify-end gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                      <Button className="w-full sm:w-auto" type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={() => setDeletingCategory(category)} disabled={isPending}>
+                      <Button className="w-full sm:w-auto" type="button" variant="outline" size="sm" onClick={() => setDeletingCategory(category)} disabled={isPending}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </Button>

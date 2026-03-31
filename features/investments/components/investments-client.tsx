@@ -63,7 +63,7 @@ export function InvestmentsClient({ initialItems }: { initialItems: InvestmentIt
         eyebrow="Investments"
         title="📈 Monitor family capital growth"
         description="Track invested principal, current market value, and realized posture across accounts."
-        actions={<Button onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add investment</Button>}
+        actions={<Button className="w-full sm:w-auto" onClick={() => { setEditingItem(undefined); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" />Add investment</Button>}
       />
       <InvestmentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => router.refresh()} initialData={editingItem} />
       <ConfirmDialog
@@ -112,9 +112,9 @@ export function InvestmentsClient({ initialItems }: { initialItems: InvestmentIt
                     </p>
                     {item.notes ? <p className="mt-1 text-[12px] text-muted-foreground">{item.notes}</p> : null}
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => onEdit(item)} disabled={isPending}><Pencil className="mr-2 h-4 w-4" />Edit</Button>
+                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => setDeletingItem(item)} disabled={isPending}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>
                   </div>
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-3">

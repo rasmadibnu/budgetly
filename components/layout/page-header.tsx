@@ -16,7 +16,7 @@ export function PageHeader({
         <h2 className="mt-1 text-xl font-semibold tracking-[-0.02em]">{title}</h2>
         <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>
       </div>
-      {actions}
+      {actions ? <div className="w-full sm:w-auto">{actions}</div> : null}
     </div>
   );
 }

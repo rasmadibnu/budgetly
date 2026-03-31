@@ -106,12 +106,13 @@ export function TransactionsClient({
         title="💸 Every rupiah, organized"
         description="Searchable household ledger with export, receipt links, and recurring support."
         actions={
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={exportCsv}>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Button variant="outline" onClick={exportCsv} className="w-full sm:w-auto">
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
             <Button
+              className="w-full sm:w-auto"
               onClick={() => {
                 setEditing(undefined);
                 setDialogOpen(true);
@@ -170,10 +171,11 @@ export function TransactionsClient({
                       </div>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{row.description ?? "No description"}</p>
-                    <div className="mt-4 flex justify-end gap-2">
+                    <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => {
                           setEditing(row);
                           setDialogOpen(true);
@@ -181,7 +183,7 @@ export function TransactionsClient({
                       >
                         Edit
                       </Button>
-                      <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingId(row.id)}>
+                      <Button variant="ghost" size="icon" className="w-full sm:w-9" disabled={isPending} onClick={() => setDeletingId(row.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -245,11 +247,11 @@ export function TransactionsClient({
                   </TableBody>
                 </Table>
               </div>
-              <div className="mt-6 flex items-center justify-between">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</Button>
-                  <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <Button className="w-full sm:w-auto" variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</Button>
+                  <Button className="w-full sm:w-auto" variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button>
                 </div>
               </div>
             </motion.div>
