@@ -52,6 +52,17 @@ export async function updateInvestment(input: InvestmentInput) {
   revalidateInvestments();
 }
 
+export async function updateInvestmentStatus(id: string, status: "active" | "closed") {
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase
+    .from("investments")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) throw error;
+  revalidateInvestments();
+}
+
 export async function deleteInvestment(id: string) {
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.from("investments").delete().eq("id", id);

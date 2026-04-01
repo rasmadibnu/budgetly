@@ -52,6 +52,17 @@ export async function updateDebtReceivable(input: DebtInput) {
   revalidateDebts();
 }
 
+export async function updateDebtReceivableStatus(id: string, status: "open" | "settled") {
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase
+    .from("debts_receivables")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) throw error;
+  revalidateDebts();
+}
+
 export async function deleteDebtReceivable(id: string) {
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.from("debts_receivables").delete().eq("id", id);

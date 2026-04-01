@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Download, Plus, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/money-value";
@@ -55,6 +56,7 @@ export function TransactionsClient({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<(TransactionListItem & { categoryId?: string | null }) | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<TransactionListItem | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -100,45 +102,52 @@ export function TransactionsClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Transactions"
         title="💸 Every rupiah, organized"
         description="Searchable household ledger with export, receipt links, and recurring support."
-        actions={
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button variant="outline" onClick={exportCsv} className="w-full sm:w-auto">
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => {
-                setEditing(undefined);
-                setDialogOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add transaction
-            </Button>
-          </div>
-        }
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly income</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.income} /></div></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Monthly expense</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.expense} /></div></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Net flow</p><div className="mt-2 text-2xl font-semibold"><MoneyValue value={summary.net} /></div></CardContent></Card>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-3">
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-xs text-muted-foreground sm:text-sm">Income</p><div className="mt-1 text-base font-semibold sm:mt-2 sm:text-2xl"><MoneyValue value={summary.income} compact className="sm:hidden" /><MoneyValue value={summary.income} className="hidden sm:inline" /></div></CardContent></Card>
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-xs text-muted-foreground sm:text-sm">Expense</p><div className="mt-1 text-base font-semibold sm:mt-2 sm:text-2xl"><MoneyValue value={summary.expense} compact className="sm:hidden" /><MoneyValue value={summary.expense} className="hidden sm:inline" /></div></CardContent></Card>
+        <Card><CardContent className="p-3 sm:p-5"><p className="text-xs text-muted-foreground sm:text-sm">Net</p><div className="mt-1 text-base font-semibold sm:mt-2 sm:text-2xl"><MoneyValue value={summary.net} compact className="sm:hidden" /><MoneyValue value={summary.net} className="hidden sm:inline" /></div></CardContent></Card>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="relative w-full md:max-w-sm">
+      <Card className="border-0 bg-transparent shadow-none md:rounded-xl md:border md:bg-card md:shadow-none">
+        <CardContent className="px-0 pb-0 pt-0 md:p-6">
+          <div className="mb-6 flex items-center gap-2 md:flex md:justify-between">
+            <div className="relative min-w-0 flex-1 md:w-full md:max-w-sm md:flex-none">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search transactions" className="pl-10" />
             </div>
-            <Badge variant="secondary">{filteredRows.length} records</Badge>
+            <div className="flex min-w-0 justify-end gap-2 md:w-auto">
+              <Button
+                onClick={() => {
+                  setEditing(undefined);
+                  setDialogOpen(true);
+                }}
+                size="icon"
+                className="shrink-0 md:h-9 md:w-auto md:px-4 md:py-2"
+                aria-label="Add transaction"
+                title="Add transaction"
+              >
+                <Plus className="h-4 w-4 md:mr-2" />
+                <span className="sr-only md:not-sr-only">Add transaction</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={exportCsv}
+                size="icon"
+                className="shrink-0 md:h-9 md:w-auto md:px-4 md:py-2"
+                aria-label="Export CSV"
+                title="Export CSV"
+              >
+                <Download className="h-4 w-4 md:mr-2" />
+                <span className="sr-only md:not-sr-only">Export CSV</span>
+              </Button>
+            </div>
           </div>
           {!paginatedRows.length ? (
             <EmptyState title="No transactions yet" description="Create the first household transaction to start tracking cash flow." actionLabel="Add transaction" onAction={() => setDialogOpen(true)} />
@@ -146,10 +155,18 @@ export function TransactionsClient({
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="space-y-3 md:hidden">
                 {paginatedRows.map((row) => (
-                  <div key={row.id} className="rounded-2xl border border-border p-4">
+                  <button
+                    key={row.id}
+                    type="button"
+                    className="w-full rounded-2xl border border-border p-4 text-left transition hover:border-foreground/15 hover:bg-muted/20"
+                    onClick={() => setSelectedRow(row)}
+                    aria-label={`Open actions for ${row.description ?? row.category}`}
+                  >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">{row.userName}</p>
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="truncate text-sm font-medium">{row.userName}</p>
+                        </div>
                         <Badge
                           variant="outline"
                           className="border-transparent"
@@ -165,29 +182,16 @@ export function TransactionsClient({
                           {row.category}
                         </Badge>
                       </div>
-                      <div className="text-right">
+                      <div className="shrink-0 text-right">
                         <p className="text-xs text-muted-foreground">{formatDateTime(row.createdAt)}</p>
-                        <MoneyValue value={row.amount} className={row.type === "income" ? "mt-1 font-semibold text-success" : "mt-1 font-semibold"} />
+                        <span className={row.type === "income" ? "mt-1 inline-block font-semibold text-success" : "mt-1 inline-block font-semibold text-rose-600"}>
+                          {row.type === "income" ? "+ " : "- "}
+                          <MoneyValue value={row.amount} />
+                        </span>
                       </div>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{row.description ?? "No description"}</p>
-                    <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() => {
-                          setEditing(row);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="icon" className="w-full sm:w-9" disabled={isPending} onClick={() => setDeletingId(row.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
               <div className="hidden overflow-x-auto md:block">
@@ -229,13 +233,14 @@ export function TransactionsClient({
                           <div className="flex justify-end gap-2">
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={() => {
                                 setEditing(row);
                                 setDialogOpen(true);
                               }}
+                              aria-label={`Edit ${row.description ?? row.category}`}
                             >
-                              Edit
+                              <Pencil className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" disabled={isPending} onClick={() => setDeletingId(row.id)}>
                               <Trash2 className="h-4 w-4" />
@@ -248,8 +253,11 @@ export function TransactionsClient({
                 </Table>
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <div className="flex items-center justify-between gap-3 sm:flex-row sm:items-center sm:gap-3">
+                  <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
+                  <Badge variant="secondary" className="w-fit">{filteredRows.length} records</Badge>
+                </div>
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
                   <Button className="w-full sm:w-auto" variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</Button>
                   <Button className="w-full sm:w-auto" variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Next</Button>
                 </div>
@@ -270,6 +278,56 @@ export function TransactionsClient({
           setPage(1);
         }}
       />
+      <Sheet open={Boolean(selectedRow)} onOpenChange={(open) => !open && setSelectedRow(null)}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Transaction actions</SheetTitle>
+            <SheetDescription>
+              {selectedRow ? selectedRow.category : "Choose what to do with this transaction."}
+            </SheetDescription>
+          </SheetHeader>
+          {selectedRow ? (
+            <div className="space-y-3 p-5">
+              <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{selectedRow.userName}</p>
+                    <p className="text-sm text-muted-foreground">{selectedRow.description ?? "No description"}</p>
+                  </div>
+                  <MoneyValue value={selectedRow.amount} className={selectedRow.type === "income" ? "font-semibold text-success" : "font-semibold"} />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">{formatDateTime(selectedRow.createdAt)}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="justify-center"
+                  onClick={() => {
+                    setEditing(selectedRow);
+                    setSelectedRow(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit transaction
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="justify-center"
+                  disabled={isPending}
+                  onClick={() => {
+                    setDeletingId(selectedRow.id);
+                    setSelectedRow(null);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete transaction
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
       <ConfirmDialog
         open={Boolean(deletingId)}
         onOpenChange={(open) => !open && setDeletingId(null)}

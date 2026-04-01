@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Ellipsis, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { MoneyValue } from "@/components/ui/money-value";
 import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { GoalFormDialog } from "@/features/goals/components/goal-form-dialog";
 import { completeGoal, deleteGoal } from "@/features/goals/server/actions";
@@ -37,6 +38,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GoalCardData | undefined>(undefined);
   const [deletingGoal, setDeletingGoal] = useState<GoalCardData | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<GoalCardData | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -65,15 +67,15 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Goals"
         title="🎯 Savings targets for the family"
         description="Track longer-term priorities like an emergency fund, travel, or big purchases."
         actions={
-          <Button className="w-full sm:w-auto" onClick={() => { setEditing(undefined); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add goal
+          <Button className="shrink-0 md:h-9 md:px-4 md:py-2" size="icon" onClick={() => { setEditing(undefined); setDialogOpen(true); }} aria-label="Add goal" title="Add goal">
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="sr-only md:not-sr-only">Add goal</span>
           </Button>
         }
       />
@@ -107,7 +109,7 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                     </p>
                     <p className="mt-1 text-[12px] text-muted-foreground">Last updated · {formatDateTime(goal.updatedAt)}</p>
                   </div>
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+                  <div className="hidden w-full flex-col gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                     <Button
                       className="w-full sm:w-auto"
                       variant="outline"
@@ -140,11 +142,76 @@ export function GoalsClient({ initialGoals }: { initialGoals: GoalCardData[] }) 
                   <div><p className="text-muted-foreground">Target</p><MoneyValue value={goal.targetAmount} className="font-semibold" /></div>
                   <div><p className="text-muted-foreground">Remaining</p><MoneyValue value={goal.remaining} className="font-semibold" /></div>
                 </div>
+                <div className="flex items-center justify-between border-t border-border/70 pt-3 sm:hidden">
+                  <span className="text-xs text-muted-foreground">{goal.status === "completed" ? "Completed" : "Open goal"}</span>
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedGoal(goal)} aria-label={`Open actions for ${goal.name}`}>
+                    <Ellipsis className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+      <Sheet open={Boolean(selectedGoal)} onOpenChange={(open) => !open && setSelectedGoal(null)}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Goal actions</SheetTitle>
+            <SheetDescription>
+              {selectedGoal ? selectedGoal.name : "Choose what to do with this goal."}
+            </SheetDescription>
+          </SheetHeader>
+          {selectedGoal ? (
+            <div className="space-y-3 p-5">
+              <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                <p className="text-sm font-medium">{selectedGoal.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{getGoalCountdown(selectedGoal.targetDate)}</p>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-semibold">{Math.round(selectedGoal.progress)}%</span>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => {
+                    setEditing(selectedGoal);
+                    setSelectedGoal(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit goal
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => {
+                    markCompleted(selectedGoal.id);
+                    setSelectedGoal(null);
+                  }}
+                  disabled={selectedGoal.status === "completed" || isPending}
+                >
+                  Mark completed
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="justify-start"
+                  onClick={() => {
+                    setDeletingGoal(selectedGoal);
+                    setSelectedGoal(null);
+                  }}
+                  disabled={isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete goal
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

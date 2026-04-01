@@ -17,6 +17,33 @@ export function formatCompactCurrency(value: number) {
   return compactFormatter.format(value);
 }
 
+export function formatMobileCurrency(value: number) {
+  const absolute = Math.abs(value);
+
+  if (absolute >= 1_000_000_000) {
+    const formatted = absolute % 1_000_000_000 === 0
+      ? (absolute / 1_000_000_000).toFixed(0)
+      : (absolute / 1_000_000_000).toFixed(1);
+    return `${value < 0 ? "-" : ""}${formatted}b`;
+  }
+
+  if (absolute >= 1_000_000) {
+    const formatted = absolute % 1_000_000 === 0
+      ? (absolute / 1_000_000).toFixed(0)
+      : (absolute / 1_000_000).toFixed(1);
+    return `${value < 0 ? "-" : ""}${formatted}m`;
+  }
+
+  if (absolute >= 1_000) {
+    const formatted = absolute % 1_000 === 0
+      ? (absolute / 1_000).toFixed(0)
+      : (absolute / 1_000).toFixed(1);
+    return `${value < 0 ? "-" : ""}${formatted}k`;
+  }
+
+  return `${value}`;
+}
+
 export function formatDate(value: string | Date, options?: Intl.DateTimeFormatOptions) {
   return new Intl.DateTimeFormat("id-ID", {
     timeZone: "Asia/Jakarta",

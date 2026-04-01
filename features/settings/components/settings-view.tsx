@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Download, FileArchive, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Download, Ellipsis, FileArchive, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { deleteCategory, upsertCategory } from "@/features/categories/server/actions";
 import { categorySchema, type CategoryInput } from "@/features/categories/schemas/category-schema";
 import { exportBackupAction, generateMonthlyReportAction } from "@/features/settings/server/actions";
@@ -48,6 +49,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
   const [editingId, setEditingId] = useState<string | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<CategoryOption | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const form = useForm<CategoryInput>({
@@ -206,12 +208,12 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
               <CardTitle>Category list</CardTitle>
               <CardDescription>Master data for all household income and expense classifications.</CardDescription>
             </div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              <Button className="w-full sm:w-auto" onClick={startCreate}>
+            <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:items-center sm:justify-end">
+              <Button className="shrink-0" onClick={startCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add category
               </Button>
-              <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={exportBackup} disabled={isPending}>
+              <Button className="shrink-0" type="button" variant="outline" onClick={exportBackup} disabled={isPending}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
@@ -236,14 +238,9 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                       <span className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: category.color }} />
                       <span className="font-mono text-xs text-muted-foreground">{category.color}</span>
                     </div>
-                    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                      <Button className="w-full sm:w-auto" type="button" variant="outline" size="sm" onClick={() => startEdit(category)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button className="w-full sm:w-auto" type="button" variant="outline" size="sm" onClick={() => setDeletingCategory(category)} disabled={isPending}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                    <div className="mt-4 flex items-center justify-end border-t border-border/70 pt-3">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedCategory(category)} aria-label={`Open actions for ${category.name}`}>
+                        <Ellipsis className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -301,6 +298,39 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
           </CardContent>
         </Card>
       </div>
+      <Sheet open={Boolean(selectedCategory)} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Category actions</SheetTitle>
+            <SheetDescription>
+              {selectedCategory ? selectedCategory.name : "Choose what to do with this category."}
+            </SheetDescription>
+          </SheetHeader>
+          {selectedCategory ? (
+            <div className="space-y-3 p-5">
+              <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: selectedCategory.color }} />
+                  <div>
+                    <p className="text-sm font-medium">{selectedCategory.name}</p>
+                    <p className="text-xs text-muted-foreground">{selectedCategory.type}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Button type="button" variant="outline" className="justify-start" onClick={() => { startEdit(selectedCategory); setSelectedCategory(null); }}>
+                  <Pencil className="h-4 w-4" />
+                  Edit category
+                </Button>
+                <Button type="button" variant="destructive" className="justify-start" onClick={() => { setDeletingCategory(selectedCategory); setSelectedCategory(null); }} disabled={isPending}>
+                  <Trash2 className="h-4 w-4" />
+                  Delete category
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
       <Dialog open={categoryDialogOpen} onOpenChange={(open) => (!open ? resetCategoryForm() : setCategoryDialogOpen(true))}>
         <DialogContent>
           <DialogHeader>

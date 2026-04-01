@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategoryQuickCreateDialog } from "@/features/categories/components/category-quick-create-dialog";
-import { createBudget } from "@/features/budgets/server/actions";
+import { createBudget, updateBudget } from "@/features/budgets/server/actions";
 import { budgetSchema, type BudgetInput } from "@/features/budgets/schemas/budget-schema";
 import type { BudgetUsageItem, CategoryOption } from "@/types/app";
 
@@ -30,6 +30,7 @@ export function BudgetFormDialog({
   categories,
   existingItems,
   month,
+  initialData,
   onSuccess
 }: {
   open: boolean;
@@ -37,7 +38,8 @@ export function BudgetFormDialog({
   categories: CategoryOption[];
   existingItems: BudgetUsageItem[];
   month: string;
-  onSuccess: (item: BudgetUsageItem) => void;
+  initialData?: (BudgetInput & { id: string }) | undefined;
+  onSuccess: (item: BudgetUsageItem, mode: "create" | "update") => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [localCategories, setLocalCategories] = useState(categories);
@@ -46,9 +48,14 @@ export function BudgetFormDialog({
   const availableCategories = useMemo(
     () =>
       localCategories.filter(
-        (category) => category.type === "expense" && !existingItems.some((item) => item.categoryId === category.id)
+        (category) =>
+          category.type === "expense" &&
+          (
+            category.id === initialData?.categoryId ||
+            !existingItems.some((item) => item.categoryId === category.id)
+          )
       ),
-    [existingItems, localCategories]
+    [existingItems, initialData?.categoryId, localCategories]
   );
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
@@ -62,12 +69,12 @@ export function BudgetFormDialog({
   useEffect(() => {
     if (open) {
       form.reset({
-        categoryId: availableCategories[0]?.id ?? "",
-        month,
-        amount: 0
+        categoryId: initialData?.categoryId ?? availableCategories[0]?.id ?? "",
+        month: initialData?.month ?? month,
+        amount: initialData?.amount ?? 0
       });
     }
-  }, [open, form, availableCategories, month]);
+  }, [open, form, availableCategories, initialData, month]);
 
   useEffect(() => {
     setLocalCategories(categories);
@@ -76,17 +83,19 @@ export function BudgetFormDialog({
   const submit = form.handleSubmit((values) => {
     startTransition(async () => {
       try {
-        const createdBudget = await createBudget(values);
-        const selectedCategory = localCategories.find((category) => category.id === createdBudget.categoryId);
-        toast.success("Budget created");
+        const budget = initialData
+          ? await updateBudget({ ...values, id: initialData.id })
+          : await createBudget(values);
+        const selectedCategory = localCategories.find((category) => category.id === budget.categoryId);
+        toast.success(initialData ? "Budget updated" : "Budget created");
         onOpenChange(false);
         onSuccess({
-          ...createdBudget,
-          category: selectedCategory?.name ?? createdBudget.category
-        });
+          ...budget,
+          category: selectedCategory?.name ?? budget.category
+        }, initialData ? "update" : "create");
         router.refresh();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to create budget");
+        toast.error(error instanceof Error ? error.message : initialData ? "Unable to update budget" : "Unable to create budget");
       }
     });
   });
@@ -95,8 +104,8 @@ export function BudgetFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create monthly budget</DialogTitle>
-          <DialogDescription>Set a spending limit for a category this month.</DialogDescription>
+          <DialogTitle>{initialData ? "Edit monthly budget" : "Create monthly budget"}</DialogTitle>
+          <DialogDescription>{initialData ? "Update the category budget for this month." : "Set a spending limit for a category this month."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-1.5">
@@ -129,7 +138,7 @@ export function BudgetFormDialog({
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isPending || !availableCategories.length}>
-              {isPending ? "Saving..." : "Save budget"}
+              {isPending ? "Saving..." : initialData ? "Update budget" : "Save budget"}
             </Button>
           </DialogFooter>
         </form>

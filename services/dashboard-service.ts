@@ -8,6 +8,28 @@ function formatUsername(value: string) {
   return value.replace(/\b\w/g, (char: string) => char.toUpperCase());
 }
 
+function formatMonthLabel(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    month: "short",
+    year: "2-digit"
+  }).format(new Date(`${value}-01T00:00:00+07:00`));
+}
+
+function formatDayLabel(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit"
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function formatWeekdayLabel(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "short"
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
 export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promise<DashboardSnapshot> {
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
@@ -71,25 +93,42 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     ? activeGoals.reduce((sum, goal) => sum + goal.progress, 0) / activeGoals.length
     : 0;
 
-  const expenseSeriesMap = new Map<string, number>();
-  const incomeExpenseMap = new Map<string, { income: number; expense: number }>();
+  const expenseSeriesMonthlyMap = new Map<string, number>();
+  const expenseSeriesDailyMap = new Map<string, number>();
+  const incomeExpenseMonthlyMap = new Map<string, { income: number; expense: number }>();
+  const incomeExpenseDailyMap = new Map<string, { income: number; expense: number }>();
   const categoryDistributionMap = new Map<string, number>();
 
   transactionsResponse.data.forEach((transaction) => {
     const monthKey = transaction.date.slice(0, 7);
-    const monthValue = expenseSeriesMap.get(monthKey) ?? 0;
-    const incomeExpense = incomeExpenseMap.get(monthKey) ?? { income: 0, expense: 0 };
+    const monthlyExpenseValue = expenseSeriesMonthlyMap.get(monthKey) ?? 0;
+    const monthlyIncomeExpense = incomeExpenseMonthlyMap.get(monthKey) ?? { income: 0, expense: 0 };
+    const dailyIncomeExpense = incomeExpenseDailyMap.get(transaction.date) ?? { income: 0, expense: 0 };
+    const dailyExpenseValue = expenseSeriesDailyMap.get(transaction.date) ?? 0;
 
     if (transaction.type === "expense") {
-      expenseSeriesMap.set(monthKey, monthValue + transaction.amount);
-      incomeExpense.expense += transaction.amount;
+      expenseSeriesMonthlyMap.set(monthKey, monthlyExpenseValue + transaction.amount);
+      monthlyIncomeExpense.expense += transaction.amount;
       const categoryName = categoriesById.get(transaction.category_id ?? "") ?? "Uncategorized";
       categoryDistributionMap.set(categoryName, (categoryDistributionMap.get(categoryName) ?? 0) + transaction.amount);
+
+      if (transaction.date.startsWith(month)) {
+        expenseSeriesDailyMap.set(transaction.date, dailyExpenseValue + transaction.amount);
+        dailyIncomeExpense.expense += transaction.amount;
+      }
     } else {
-      incomeExpense.income += transaction.amount;
+      monthlyIncomeExpense.income += transaction.amount;
+
+      if (transaction.date.startsWith(month)) {
+        dailyIncomeExpense.income += transaction.amount;
+      }
     }
 
-    incomeExpenseMap.set(monthKey, incomeExpense);
+    incomeExpenseMonthlyMap.set(monthKey, monthlyIncomeExpense);
+
+    if (transaction.date.startsWith(month)) {
+      incomeExpenseDailyMap.set(transaction.date, dailyIncomeExpense);
+    }
   });
 
   const budgetRemaining = budgetsResponse.data.reduce((sum, budget) => sum + budget.remaining_amount, 0);
@@ -106,6 +145,22 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     }))
     .sort((a, b) => b.percentage - a.percentage)
     .slice(0, 4);
+
+  const [year, monthNumber] = month.split("-").map(Number);
+  const totalDaysInMonth = new Date(year, monthNumber, 0).getDate();
+  const dailyCashCalendar = Array.from({ length: totalDaysInMonth }, (_, index) => {
+    const date = `${month}-${String(index + 1).padStart(2, "0")}`;
+    const values = incomeExpenseDailyMap.get(date) ?? { income: 0, expense: 0 };
+
+    return {
+      date,
+      dayLabel: formatDayLabel(date),
+      weekdayLabel: formatWeekdayLabel(date),
+      income: values.income,
+      expense: values.expense,
+      net: values.income - values.expense
+    };
+  });
 
   return {
     totalBalance,
@@ -126,12 +181,23 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       paymentMethod: transaction.payment_method,
       attachmentUrl: transaction.attachment_url
     })),
-    expenseSeries: Array.from(expenseSeriesMap.entries()).map(([monthKey, amount]) => ({ month: monthKey, amount })),
-    incomeExpenseSeries: Array.from(incomeExpenseMap.entries()).map(([monthKey, values]) => ({
-      month: monthKey,
-      income: values.income,
-      expense: values.expense
+    expenseSeriesDaily: dailyCashCalendar.map((entry) => ({ label: entry.dayLabel, amount: entry.expense })),
+    expenseSeriesMonthly: Array.from(expenseSeriesMonthlyMap.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([monthKey, amount]) => ({ label: formatMonthLabel(monthKey), amount })),
+    incomeExpenseSeriesDaily: dailyCashCalendar.map((entry) => ({
+      label: entry.dayLabel,
+      income: entry.income,
+      expense: entry.expense
     })),
+    incomeExpenseSeriesMonthly: Array.from(incomeExpenseMonthlyMap.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([monthKey, values]) => ({
+        label: formatMonthLabel(monthKey),
+        income: values.income,
+        expense: values.expense
+      })),
+    dailyCashCalendar,
     categoryDistribution: Array.from(categoryDistributionMap.entries()).map(([name, value]) => ({ name, value })),
     budgetHighlights,
     activeGoals: activeGoals.slice(0, 4)

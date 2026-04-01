@@ -43,20 +43,34 @@ export async function createBudget(input: BudgetInput): Promise<BudgetUsageItem>
   };
 }
 
-export async function updateBudget(input: BudgetInput) {
+export async function updateBudget(input: BudgetInput): Promise<BudgetUsageItem> {
   const parsed = budgetSchema.extend({ id: z.string().uuid() }).parse(input);
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("budgets")
     .update({
       category_id: parsed.categoryId,
       month: parsed.month,
       amount: parsed.amount
     })
+    .select("id, category_id, month, amount")
     .eq("id", parsed.id);
 
   if (error) throw error;
+  const budget = data?.[0];
+  if (!budget) throw new Error("Unable to update budget");
   revalidateBudgets();
+
+  return {
+    id: budget.id,
+    categoryId: budget.category_id,
+    category: "Uncategorized",
+    month: budget.month,
+    amount: budget.amount,
+    spent: 0,
+    remaining: budget.amount,
+    percentage: 0
+  };
 }
 
 export async function deleteBudget(id: string) {
