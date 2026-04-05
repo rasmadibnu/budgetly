@@ -9,20 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/money-value";
-import type { DailyCashCalendarEntry, MonthlyReportRecord } from "@/types/app";
+import type { MonthlyReportRecord } from "@/types/app";
 import { formatMonthLabel } from "@/utils/format";
 import { generateMonthlyReportAction } from "@/features/settings/server/actions";
-import { DailyCashCalendar } from "@/features/reports/components/daily-cash-calendar";
 
-export function ReportsView({
-  initialReport,
-  dailyCashCalendar,
-  month
-}: {
-  initialReport: MonthlyReportRecord | null;
-  dailyCashCalendar: DailyCashCalendarEntry[];
-  month: string;
-}) {
+export function ReportsView({ initialReport, month }: { initialReport: MonthlyReportRecord | null; month: string }) {
   const [report, setReport] = useState(initialReport);
   const [isPending, startTransition] = useTransition();
 
@@ -93,9 +84,6 @@ export function ReportsView({
                 </CardContent>
               </Card>
             </div>
-
-            <DailyCashCalendar month={month} entries={dailyCashCalendar} />
-
             <div className="grid gap-4 xl:grid-cols-4">
               <Card>
                 <CardContent className="p-5">

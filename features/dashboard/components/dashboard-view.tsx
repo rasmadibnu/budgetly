@@ -5,6 +5,7 @@ import { CategoryPieChart } from "@/features/dashboard/components/category-pie-c
 import { RecentTransactionsCard } from "@/features/dashboard/components/recent-transactions-card";
 import { BudgetUsageCard } from "@/features/dashboard/components/budget-usage-card";
 import { GoalsProgressCard } from "@/features/dashboard/components/goals-progress-card";
+import { DailyCashCalendar } from "@/features/dashboard/components/daily-cash-calendar";
 import type { DashboardSnapshot } from "@/types/app";
 import { formatPercentage } from "@/utils/format";
 import { PageHeader } from "@/components/layout/page-header";
@@ -39,6 +40,7 @@ export function DashboardView({ snapshot }: { snapshot: DashboardSnapshot }) {
         </div>
         <BudgetUsageCard budgets={snapshot.budgetHighlights} />
       </div>
+      <DailyCashCalendar month={snapshot.dailyCashCalendar[0]?.date.slice(0, 7) ?? ""} entries={snapshot.dailyCashCalendar} />
       <div className="grid gap-4 xl:grid-cols-2">
         <RecentTransactionsCard transactions={snapshot.recentTransactions} />
         <GoalsProgressCard goals={snapshot.activeGoals} />
