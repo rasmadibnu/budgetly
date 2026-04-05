@@ -84,10 +84,19 @@ export interface DashboardSnapshot {
   expenseSeriesMonthly: Array<{ label: string; amount: number }>;
   incomeExpenseSeriesDaily: Array<{ label: string; income: number; expense: number }>;
   incomeExpenseSeriesMonthly: Array<{ label: string; income: number; expense: number }>;
-  dailyCashCalendar: Array<{ date: string; dayLabel: string; weekdayLabel: string; income: number; expense: number; net: number }>;
+  dailyCashCalendar: DailyCashCalendarEntry[];
   categoryDistribution: Array<{ name: string; value: number }>;
   budgetHighlights: BudgetUsageItem[];
   activeGoals: GoalCardData[];
+}
+
+export interface DailyCashCalendarEntry {
+  date: string;
+  dayLabel: string;
+  weekdayLabel: string;
+  income: number;
+  expense: number;
+  net: number;
 }
 
 export interface MonthlyReportRecord {

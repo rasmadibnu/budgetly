@@ -8,7 +8,7 @@ import { getGoals } from "@/services/goal-service";
 import { getDebtsReceivables } from "@/services/debt-service";
 import { getInvestments } from "@/services/investment-service";
 import { getSubscriptions } from "@/services/subscription-service";
-import type { MonthlyReportRecord } from "@/types/app";
+import type { DailyCashCalendarEntry, MonthlyReportRecord } from "@/types/app";
 
 interface AiMonthlyNarrative {
   overview: string;
@@ -16,6 +16,20 @@ interface AiMonthlyNarrative {
   risks: string[];
   actions: string[];
   generatedAt: string;
+}
+
+function formatDayLabel(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit"
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function formatWeekdayLabel(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "short"
+  }).format(new Date(`${value}T00:00:00+07:00`));
 }
 
 async function generateAiNarrative(summary: {
@@ -182,6 +196,40 @@ export async function getMonthlyReport(month = getCurrentMonthKey()): Promise<Mo
     createdAt: data.created_at,
     summary: data.summary_json as MonthlyReportRecord["summary"]
   };
+}
+
+export async function getDailyCashCalendar(month = getCurrentMonthKey()): Promise<DailyCashCalendarEntry[]> {
+  const { rows } = await getTransactions({ month });
+  const dailyTotals = new Map<string, { income: number; expense: number }>();
+
+  rows.forEach((transaction) => {
+    const current = dailyTotals.get(transaction.date) ?? { income: 0, expense: 0 };
+
+    if (transaction.type === "income") {
+      current.income += transaction.amount;
+    } else {
+      current.expense += transaction.amount;
+    }
+
+    dailyTotals.set(transaction.date, current);
+  });
+
+  const [year, monthNumber] = month.split("-").map(Number);
+  const totalDaysInMonth = new Date(year, monthNumber, 0).getDate();
+
+  return Array.from({ length: totalDaysInMonth }, (_, index) => {
+    const date = `${month}-${String(index + 1).padStart(2, "0")}`;
+    const values = dailyTotals.get(date) ?? { income: 0, expense: 0 };
+
+    return {
+      date,
+      dayLabel: formatDayLabel(date),
+      weekdayLabel: formatWeekdayLabel(date),
+      income: values.income,
+      expense: values.expense,
+      net: values.income - values.expense
+    };
+  });
 }
 
 export async function backupHousehold() {

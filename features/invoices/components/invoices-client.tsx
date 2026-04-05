@@ -79,12 +79,18 @@ export function InvoicesClient({ initialInvoices }: { initialInvoices: InvoiceIt
         title="🧾 Client invoices"
         description="Track invoices issued to your clients and mark each one as paid or unpaid."
         actions={
-          <Button className="shrink-0 md:h-9 md:px-4 md:py-2" size="icon" onClick={() => {
+          <Button
+            className="shrink-0 md:h-9 md:w-auto md:px-4 md:py-2"
+            size="icon"
+            onClick={() => {
             setEditingInvoice(undefined);
             setDialogOpen(true);
-          }} aria-label="Add invoice" title="Add invoice">
+            }}
+            aria-label="Add invoice"
+            title="Add invoice"
+          >
             <Plus className="h-4 w-4 md:mr-2" />
-            <span className="sr-only md:not-sr-only">Add invoice</span>
+            <span className="hidden md:inline whitespace-nowrap">Add invoice</span>
           </Button>
         }
       />
