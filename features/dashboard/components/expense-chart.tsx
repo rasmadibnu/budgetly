@@ -21,7 +21,7 @@ export function ExpenseChart({
   const data = view === "daily" ? dailyData : monthlyData;
   const totalExpense = data.reduce((sum, item) => sum + item.amount, 0);
   const peakDay = data.reduce((best, item) => (item.amount > best.amount ? item : best), data[0] ?? { label: "-", amount: 0 });
-  const showInlineLabels = isMobile && data.length <= 8;
+  const mobileChartWidth = Math.max(data.length * 56, 360);
 
   return (
     <ChartShell title={view === "daily" ? "Daily expenses" : "Monthly expenses"} description={view === "daily" ? "Track expense movement day by day this month." : "Track expense movement month by month."}>
@@ -40,18 +40,27 @@ export function ExpenseChart({
         </div>
       </div>
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} />
-            <YAxis hide={isMobile} axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
-            <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
-            <Bar dataKey="amount" fill="hsl(var(--chart-1))" radius={[12, 12, 0, 0]}>
-              {showInlineLabels ? (
+        {isMobile ? (
+          <div className="h-full overflow-x-auto overflow-y-hidden pb-2">
+            <BarChart width={mobileChartWidth} height={320} data={data} margin={{ top: 24, right: 8, left: 8, bottom: 8 }}>
+              <XAxis dataKey="label" axisLine={false} tickLine={false} interval={0} />
+              <YAxis hide axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
+              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
+              <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]}>
                 <LabelList dataKey="amount" position="top" formatter={(value: number) => formatCompactCurrency(value)} className="fill-foreground text-[10px] font-medium" />
-              ) : null}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              </Bar>
+            </BarChart>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} />
+              <YAxis axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
+              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
+              <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </ChartShell>
   );

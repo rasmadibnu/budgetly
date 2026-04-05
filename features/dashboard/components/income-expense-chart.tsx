@@ -21,7 +21,7 @@ export function IncomeExpenseChart({
   const data = view === "daily" ? dailyData : monthlyData;
   const totalIncome = data.reduce((sum, item) => sum + item.income, 0);
   const totalExpense = data.reduce((sum, item) => sum + item.expense, 0);
-  const showInlineLabels = isMobile && data.length <= 8;
+  const mobileChartWidth = Math.max(data.length * 60, 380);
 
   return (
     <ChartShell title={view === "daily" ? "Income vs expense by day" : "Income vs expense"} description={view === "daily" ? "Compare daily cash-in and cash-out for this month." : "Compare cash-in and cash-out trends."}>
@@ -36,7 +36,7 @@ export function IncomeExpenseChart({
         </div>
         <div className="rounded-2xl bg-muted/40 p-3">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Expense</p>
-          <p className="mt-1 text-sm font-semibold text-[hsl(var(--chart-2))]"><MoneyValue value={totalExpense} compact /></p>
+          <p className="mt-1 text-sm font-semibold text-danger"><MoneyValue value={totalExpense} compact /></p>
         </div>
         <div className="rounded-2xl bg-muted/40 p-3">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Net</p>
@@ -44,34 +44,53 @@ export function IncomeExpenseChart({
         </div>
       </div>
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.45} />
-                <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.45} />
-                <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} />
-            <YAxis hide={isMobile} axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
-            <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
-            <Area type="monotone" dataKey="income" stroke="hsl(var(--chart-3))" fill="url(#incomeGradient)">
-              {showInlineLabels ? (
+        {isMobile ? (
+          <div className="h-full overflow-x-auto overflow-y-hidden pb-2">
+            <AreaChart width={mobileChartWidth} height={320} data={data} margin={{ top: 28, right: 8, left: 8, bottom: 20 }}>
+              <defs>
+                <linearGradient id="incomeGradientMobile" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.45} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expenseGradientMobile" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--danger))" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="hsl(var(--danger))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="label" axisLine={false} tickLine={false} interval={0} />
+              <YAxis hide axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
+              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
+              <Area type="monotone" dataKey="income" stroke="hsl(var(--chart-3))" fill="url(#incomeGradientMobile)">
                 <LabelList dataKey="income" position="top" formatter={(value: number) => formatCompactCurrency(value)} className="fill-[hsl(var(--chart-3))] text-[10px] font-medium" />
-              ) : null}
-            </Area>
-            <Area type="monotone" dataKey="expense" stroke="hsl(var(--chart-2))" fill="url(#expenseGradient)">
-              {showInlineLabels ? (
-                <LabelList dataKey="expense" position="bottom" formatter={(value: number) => formatCompactCurrency(value)} className="fill-[hsl(var(--chart-2))] text-[10px] font-medium" />
-              ) : null}
-            </Area>
-          </AreaChart>
-        </ResponsiveContainer>
+              </Area>
+              <Area type="monotone" dataKey="expense" stroke="hsl(var(--danger))" fill="url(#expenseGradientMobile)">
+                <LabelList dataKey="expense" position="bottom" offset={10} formatter={(value: number) => formatCompactCurrency(value)} className="fill-[hsl(var(--danger))] text-[10px] font-medium" />
+              </Area>
+            </AreaChart>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.45} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--danger))" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="hsl(var(--danger))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} />
+              <YAxis axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
+              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
+              <Area type="monotone" dataKey="income" stroke="hsl(var(--chart-3))" fill="url(#incomeGradient)" />
+              <Area type="monotone" dataKey="expense" stroke="hsl(var(--danger))" fill="url(#expenseGradient)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </ChartShell>
   );

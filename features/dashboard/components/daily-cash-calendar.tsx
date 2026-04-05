@@ -62,74 +62,103 @@ export function DailyCashCalendar({
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(280px,0.9fr)]">
-        <div className="overflow-hidden rounded-3xl border border-border bg-muted/15">
-          <div className="grid grid-cols-7 border-b border-border bg-muted/35">
-            {weekdayHeaders.map((label) => (
-              <div key={label} className="px-2 py-3 text-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                {label}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7">
-            {monthCells.map((entry, index) => {
-              if (!entry) {
-                return <div key={`empty-${index}`} className="min-h-24 border-b border-r border-border/70 bg-background/30 sm:min-h-32" />;
-              }
-
-              const isSelected = selectedEntry?.date === entry.date;
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:hidden">
+            {entries.map((entry) => {
               const hasActivity = entry.income > 0 || entry.expense > 0;
               const isPositive = entry.net >= 0;
 
               return (
-                <button
-                  key={entry.date}
-                  type="button"
-                  onClick={() => setSelectedDate(entry.date)}
-                  className={cn(
-                    "flex min-h-24 flex-col items-start gap-2 border-b border-r border-border/70 p-2 text-left transition hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-32 sm:p-3",
-                    isSelected && "bg-primary/8",
-                    hasActivity && !isSelected && "bg-background/60"
-                  )}
-                >
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold", isSelected ? "bg-primary text-primary-foreground" : "bg-background text-foreground")}>
-                      {entry.dayLabel}
-                    </span>
-                    <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {entry.weekdayLabel}
-                    </span>
-                  </div>
-
-                  <div className="hidden w-full space-y-1.5 sm:block">
-                    <div className="flex items-center justify-between rounded-xl bg-success/10 px-2 py-1 text-[11px]">
-                      <span className="text-success">In</span>
-                      <MoneyValue value={entry.income} compact className="font-medium text-success" />
+                <div key={entry.date} className={cn("rounded-3xl border p-4", hasActivity ? "bg-background" : "bg-muted/20")}>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{entry.weekdayLabel}, {entry.dayLabel}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(`${entry.date}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric"
+                        })}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-danger/10 px-2 py-1 text-[11px]">
-                      <span className="text-danger">Out</span>
-                      <MoneyValue value={entry.expense} compact className="font-medium text-danger" />
-                    </div>
-                    <div className={cn("rounded-xl px-2 py-1 text-[11px] font-medium", isPositive ? "bg-primary/10 text-primary" : "bg-warning/15 text-warning")}>
-                      Net <MoneyValue value={entry.net} compact className="font-medium" />
+                    <div className={cn("rounded-full px-2.5 py-1 text-xs font-medium", isPositive ? "bg-primary/10 text-primary" : "bg-danger/10 text-danger")}>
+                      <MoneyValue value={entry.net} compact />
                     </div>
                   </div>
-
-                  <div className="sm:hidden">
-                    {hasActivity ? (
-                      <div className={cn("rounded-full px-2 py-1 text-[10px] font-medium", isPositive ? "bg-primary/10 text-primary" : "bg-warning/15 text-warning")}>
-                        <MoneyValue value={entry.net} compact />
-                      </div>
-                    ) : (
-                      <div className="h-2 w-2 rounded-full bg-border" />
-                    )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-success/10 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-success">Income</p>
+                      <p className="mt-1 text-sm font-semibold text-success"><MoneyValue value={entry.income} compact /></p>
+                    </div>
+                    <div className="rounded-2xl bg-danger/10 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-danger">Expense</p>
+                      <p className="mt-1 text-sm font-semibold text-danger"><MoneyValue value={entry.expense} compact /></p>
+                    </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
+
+          <div className="hidden overflow-hidden rounded-3xl border border-border bg-muted/15 sm:block">
+            <div className="grid grid-cols-7 border-b border-border bg-muted/35">
+              {weekdayHeaders.map((label) => (
+                <div key={label} className="px-2 py-3 text-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  {label}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {monthCells.map((entry, index) => {
+                if (!entry) {
+                  return <div key={`empty-${index}`} className="min-h-32 border-b border-r border-border/70 bg-background/30" />;
+                }
+
+                const isSelected = selectedEntry?.date === entry.date;
+                const hasActivity = entry.income > 0 || entry.expense > 0;
+                const isPositive = entry.net >= 0;
+
+                return (
+                  <button
+                    key={entry.date}
+                    type="button"
+                    onClick={() => setSelectedDate(entry.date)}
+                    className={cn(
+                      "flex min-h-32 flex-col items-start gap-2 border-b border-r border-border/70 p-3 text-left transition hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isSelected && "bg-primary/8",
+                      hasActivity && !isSelected && "bg-background/60"
+                    )}
+                  >
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold", isSelected ? "bg-primary text-primary-foreground" : "bg-background text-foreground")}>
+                        {entry.dayLabel}
+                      </span>
+                      <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                        {entry.weekdayLabel}
+                      </span>
+                    </div>
+
+                    <div className="w-full space-y-1.5">
+                      <div className="flex items-center justify-between rounded-xl bg-success/10 px-2 py-1 text-[11px]">
+                        <span className="text-success">In</span>
+                        <MoneyValue value={entry.income} compact className="font-medium text-success" />
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-danger/10 px-2 py-1 text-[11px]">
+                        <span className="text-danger">Out</span>
+                        <MoneyValue value={entry.expense} compact className="font-medium text-danger" />
+                      </div>
+                      <div className={cn("rounded-xl px-2 py-1 text-[11px] font-medium", isPositive ? "bg-primary/10 text-primary" : "bg-danger/10 text-danger")}>
+                        Net <MoneyValue value={entry.net} compact className="font-medium" />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="hidden space-y-4 sm:block">
           <Card className="border-dashed">
             <CardHeader>
               <CardTitle className="text-base">
