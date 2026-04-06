@@ -40,28 +40,18 @@ export function ExpenseChart({
       </div>
       <div className="h-80 min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={isMobile ? { top: 20, right: 8, left: 8, bottom: 8 } : undefined}>
-            <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} interval={isMobile ? "preserveStartEnd" : undefined} />
+          <BarChart data={data} margin={isMobile ? { top: 30, right: 4, left: 4, bottom: 8 } : undefined}>
+            <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} interval={isMobile ? 0 : undefined} tick={{ fontSize: 10 }} />
             <YAxis hide={isMobile} axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
             <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
             <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]}>
-              {isMobile && data.length <= 10 ? (
-                <LabelList dataKey="amount" position="top" formatter={(value: number) => formatCompactCurrency(value)} className="fill-foreground text-[10px] font-medium" />
+              {isMobile && view === "daily" ? (
+                <LabelList dataKey="amount" position="top" offset={8} formatter={(value: number) => formatCompactCurrency(value)} className="fill-foreground text-[9px] font-medium" />
               ) : null}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      {isMobile ? (
-        <div className="grid grid-cols-2 gap-2 pb-1">
-          {data.map((item) => (
-            <div key={item.label} className="min-w-0 rounded-2xl border border-border bg-background px-3 py-2">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{item.label}</p>
-              <p className="mt-1 text-sm font-semibold text-danger"><MoneyValue value={item.amount} compact /></p>
-            </div>
-          ))}
-        </div>
-      ) : null}
     </ChartShell>
   );
 }
