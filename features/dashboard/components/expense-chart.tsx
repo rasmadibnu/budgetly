@@ -53,9 +53,9 @@ export function ExpenseChart({
         </ResponsiveContainer>
       </div>
       {isMobile ? (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className="grid grid-cols-2 gap-2 pb-1">
           {data.map((item) => (
-            <div key={item.label} className="min-w-[88px] rounded-2xl border border-border bg-background px-3 py-2">
+            <div key={item.label} className="min-w-0 rounded-2xl border border-border bg-background px-3 py-2">
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{item.label}</p>
               <p className="mt-1 text-sm font-semibold text-danger"><MoneyValue value={item.amount} compact /></p>
             </div>
