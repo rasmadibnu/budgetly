@@ -21,7 +21,6 @@ export function ExpenseChart({
   const data = view === "daily" ? dailyData : monthlyData;
   const totalExpense = data.reduce((sum, item) => sum + item.amount, 0);
   const peakDay = data.reduce((best, item) => (item.amount > best.amount ? item : best), data[0] ?? { label: "-", amount: 0 });
-  const mobileChartWidth = Math.max(data.length * 56, 360);
 
   return (
     <ChartShell title={view === "daily" ? "Daily expenses" : "Monthly expenses"} description={view === "daily" ? "Track expense movement day by day this month." : "Track expense movement month by month."}>
@@ -39,29 +38,30 @@ export function ExpenseChart({
           <p className="mt-1 text-sm font-semibold">{peakDay.label} · <MoneyValue value={peakDay.amount} compact /></p>
         </div>
       </div>
-      <div className="h-80">
-        {isMobile ? (
-          <div className="h-full overflow-x-auto overflow-y-hidden pb-2">
-            <BarChart width={mobileChartWidth} height={320} data={data} margin={{ top: 24, right: 8, left: 8, bottom: 8 }}>
-              <XAxis dataKey="label" axisLine={false} tickLine={false} interval={0} />
-              <YAxis hide axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
-              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
-              <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]}>
+      <div className="h-80 min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={isMobile ? { top: 20, right: 8, left: 8, bottom: 8 } : undefined}>
+            <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} interval={isMobile ? "preserveStartEnd" : undefined} />
+            <YAxis hide={isMobile} axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
+            <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
+            <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]}>
+              {isMobile && data.length <= 10 ? (
                 <LabelList dataKey="amount" position="top" formatter={(value: number) => formatCompactCurrency(value)} className="fill-foreground text-[10px] font-medium" />
-              </Bar>
-            </BarChart>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
-              <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={view === "daily" ? 18 : 12} />
-              <YAxis axisLine={false} tickLine={false} tickFormatter={formatCompactCurrency} />
-              <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
-              <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+              ) : null}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
+      {isMobile ? (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {data.map((item) => (
+            <div key={item.label} className="min-w-[88px] rounded-2xl border border-border bg-background px-3 py-2">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{item.label}</p>
+              <p className="mt-1 text-sm font-semibold text-danger"><MoneyValue value={item.amount} compact /></p>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </ChartShell>
   );
 }

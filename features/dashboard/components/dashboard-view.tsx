@@ -29,13 +29,13 @@ export function DashboardView({ snapshot }: { snapshot: DashboardSnapshot }) {
         </div>
       </div>
       <div className="grid gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+        <div className="min-w-0 xl:col-span-2">
           <ExpenseChart dailyData={snapshot.expenseSeriesDaily} monthlyData={snapshot.expenseSeriesMonthly} />
         </div>
         <CategoryPieChart data={snapshot.categoryDistribution} />
       </div>
       <div className="grid gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+        <div className="min-w-0 xl:col-span-2">
           <IncomeExpenseChart dailyData={snapshot.incomeExpenseSeriesDaily} monthlyData={snapshot.incomeExpenseSeriesMonthly} />
         </div>
         <BudgetUsageCard budgets={snapshot.budgetHighlights} />
