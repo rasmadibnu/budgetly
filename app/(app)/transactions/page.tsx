@@ -7,12 +7,14 @@ import { normalizeMonthKey } from "@/utils/date";
 export default async function TransactionsPage({
   searchParams
 }: {
-  searchParams?: Promise<{ month?: string }>;
+  searchParams?: Promise<{ month?: string; from?: string; to?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const month = normalizeMonthKey(resolvedSearchParams?.month);
+  const from = resolvedSearchParams?.from;
+  const to = resolvedSearchParams?.to;
   const [{ rows, summary }, categories, users] = await Promise.all([
-    getTransactions({ month }),
+    getTransactions({ month, from, to }),
     getCategories(),
     getHouseholdUsers()
   ]);
@@ -24,6 +26,8 @@ export default async function TransactionsPage({
       categories={categories.map((category) => ({ id: category.id, name: category.name, type: category.type, color: category.color }))}
       users={users}
       initialMonth={month}
+      initialFrom={from ?? null}
+      initialTo={to ?? null}
     />
   );
 }

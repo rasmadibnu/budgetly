@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -17,8 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/money-value";
 import { deleteTransaction } from "@/features/transactions/server/actions";
 import { TransactionFormDialog } from "@/features/transactions/components/transaction-form-dialog";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
-import { formatDateTime } from "@/utils/format";
+import { formatDate, formatDateTime } from "@/utils/format";
 
 function hexToRgba(hex: string, alpha: number) {
   const normalized = hex.replace("#", "");
@@ -42,13 +44,17 @@ export function TransactionsClient({
   summary,
   categories,
   users,
-  initialMonth
+  initialMonth,
+  initialFrom,
+  initialTo
 }: {
   initialRows: TransactionListItem[];
   summary: { income: number; expense: number; net: number };
   categories: CategoryOption[];
   users: UserProfile[];
   initialMonth: string;
+  initialFrom?: string | null;
+  initialTo?: string | null;
 }) {
   const [rows, setRows] = useState(initialRows);
   const [search, setSearch] = useState("");
@@ -57,11 +63,28 @@ export function TransactionsClient({
   const [editing, setEditing] = useState<(TransactionListItem & { categoryId?: string | null }) | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<TransactionListItem | null>(null);
+  const [fromDate, setFromDate] = useState(initialFrom ?? "");
+  const [toDate, setToDate] = useState(initialTo ?? "");
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setRows(initialRows);
   }, [initialRows]);
+
+  useEffect(() => {
+    setFromDate(initialFrom ?? "");
+  }, [initialFrom]);
+
+  useEffect(() => {
+    setToDate(initialTo ?? "");
+  }, [initialTo]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, initialRows, fromDate, toDate]);
 
   const filteredRows = useMemo(
     () => rows.filter((row) => `${row.category} ${row.description ?? ""} ${row.userName}`.toLowerCase().includes(search.toLowerCase())),
@@ -73,6 +96,39 @@ export function TransactionsClient({
   const paginatedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 
+  const activeRangeLabel = useMemo(() => {
+    if (fromDate && toDate) return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+    if (fromDate) return `From ${formatDate(fromDate)}`;
+    if (toDate) return `Until ${formatDate(toDate)}`;
+    return `Month ${initialMonth}`;
+  }, [fromDate, toDate, initialMonth]);
+
+  const applyDateRange = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (fromDate) {
+      params.set("from", fromDate);
+    } else {
+      params.delete("from");
+    }
+
+    if (toDate) {
+      params.set("to", toDate);
+    } else {
+      params.delete("to");
+    }
+
+    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+  };
+
+  const clearDateRange = () => {
+    setFromDate("");
+    setToDate("");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("from");
+    params.delete("to");
+    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+  };
+
   const exportCsv = async () => {
     const headers = ["Date,User,Type,Category,Description,Amount"];
     const lines = filteredRows.map((row) =>
@@ -82,7 +138,7 @@ export function TransactionsClient({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `budgetly-transactions-${initialMonth}.csv`);
+    link.setAttribute("download", `budgetly-transactions-${fromDate || toDate ? "range" : initialMonth}.csv`);
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -117,8 +173,8 @@ export function TransactionsClient({
 
       <Card className="border-0 bg-transparent shadow-none md:rounded-xl md:border md:bg-card md:shadow-none">
         <CardContent className="px-0 pb-0 pt-0 md:p-6">
-          <div className="mb-6 flex items-center gap-2 md:flex md:justify-between">
-            <div className="relative min-w-0 flex-1 md:w-full md:max-w-sm md:flex-none">
+          <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="relative min-w-0 md:w-full md:max-w-sm">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search transactions" className="pl-10" />
             </div>
@@ -149,6 +205,36 @@ export function TransactionsClient({
               </Button>
             </div>
           </div>
+
+          <div className="mb-6 rounded-2xl border border-border bg-muted/20 p-4">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">From</p>
+                <DatePickerField value={fromDate || undefined} onChange={setFromDate} placeholder="Start date" id="transactions-from-date" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">To</p>
+                <DatePickerField value={toDate || undefined} onChange={setToDate} placeholder="End date" id="transactions-to-date" />
+              </div>
+              <div className="flex gap-2 md:justify-end">
+                <Button type="button" variant="outline" onClick={clearDateRange} disabled={isPending || (!fromDate && !toDate)}>
+                  Clear
+                </Button>
+                <Button type="button" onClick={applyDateRange} disabled={isPending || (!fromDate && !toDate)}>
+                  Apply range
+                </Button>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">{activeRangeLabel}</Badge>
+              {(fromDate || toDate) ? (
+                <p className="text-xs text-muted-foreground">Totals and records below are using this selected date range.</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">No custom date range selected, showing the active month.</p>
+              )}
+            </div>
+          </div>
+
           {!paginatedRows.length ? (
             <EmptyState title="No transactions yet" description="Create the first household transaction to start tracking cash flow." actionLabel="Add transaction" onAction={() => setDialogOpen(true)} />
           ) : (
