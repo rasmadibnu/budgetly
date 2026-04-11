@@ -85,7 +85,7 @@ export interface DashboardSnapshot {
   incomeExpenseSeriesDaily: Array<{ label: string; income: number; expense: number }>;
   incomeExpenseSeriesMonthly: Array<{ label: string; income: number; expense: number }>;
   dailyCashCalendar: DailyCashCalendarEntry[];
-  categoryDistribution: Array<{ name: string; value: number }>;
+  categoryDistribution: Array<{ name: string; value: number; color?: string }>;
   budgetHighlights: BudgetUsageItem[];
   activeGoals: GoalCardData[];
 }

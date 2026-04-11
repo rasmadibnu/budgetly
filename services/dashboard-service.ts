@@ -47,7 +47,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       .eq("household_id", householdId)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false }),
-    supabase.from("transaction_categories").select("id, name").eq("household_id", householdId),
+    supabase.from("transaction_categories").select("id, name, color").eq("household_id", householdId),
     supabase.from("goals").select("*").eq("household_id", householdId).order("target_date", { ascending: true }),
     supabase.from("budget_usage").select("*").eq("household_id", householdId).eq("month", month),
     getHouseholdUsers()
@@ -58,6 +58,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   if (goalsResponse.error) throw goalsResponse.error;
   if (budgetsResponse.error) throw budgetsResponse.error;
   const categoriesById = new Map(categoriesResponse.data.map((category) => [category.id, category.name]));
+  const categoryColorsById = new Map(categoriesResponse.data.map((category) => [category.id, category.color]));
   const usersById = new Map(
     usersResponse.map((profile) => [profile.id, formatUsername(profile.username)])
   );
@@ -198,7 +199,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
         expense: values.expense
       })),
     dailyCashCalendar,
-    categoryDistribution: Array.from(categoryDistributionMap.entries()).map(([name, value]) => ({ name, value })),
+    categoryDistribution: Array.from(categoryDistributionMap.entries()).map(([name, value]) => {
+      const category = categoriesResponse.data.find((item) => item.name === name);
+      return { name, value, color: category?.color };
+    }),
     budgetHighlights,
     activeGoals: activeGoals.slice(0, 4)
   };
