@@ -181,7 +181,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       paymentMethod: transaction.payment_method,
       attachmentUrl: transaction.attachment_url
     })),
-    expenseSeriesDaily: dailyCashCalendar.map((entry) => ({ label: entry.dayLabel, amount: entry.expense })),
+    expenseSeriesDaily: dailyCashCalendar.map((entry) => ({ label: entry.dayLabel, amount: entry.expense, dateKey: entry.date })),
     expenseSeriesMonthly: Array.from(expenseSeriesMonthlyMap.entries())
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([monthKey, amount]) => ({ label: formatMonthLabel(monthKey), amount })),
