@@ -8,12 +8,18 @@ function formatUsername(value: string) {
   return value.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function isValidDateInput(value?: string | null) {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
+}
+
 interface TransactionFilters {
   search?: string;
   type?: string;
   categoryId?: string;
   userId?: string;
   month?: string;
+  from?: string;
+  to?: string;
 }
 
 export async function getTransactions(filters: TransactionFilters = {}) {
@@ -21,6 +27,9 @@ export async function getTransactions(filters: TransactionFilters = {}) {
   const supabase = await createSupabaseServerClient();
   const month = filters.month ?? getCurrentMonthKey();
   const { start, end } = getMonthDateRange(month);
+  const startDate = isValidDateInput(filters.from) ? filters.from! : start.toISOString().slice(0, 10);
+  const endDate = isValidDateInput(filters.to) ? filters.to! : end.toISOString().slice(0, 10);
+  const [rangeStart, rangeEnd] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
 
   let query = supabase
     .from("transactions")
@@ -28,8 +37,8 @@ export async function getTransactions(filters: TransactionFilters = {}) {
       count: "exact"
     })
     .eq("household_id", householdId)
-    .gte("date", start.toISOString().slice(0, 10))
-    .lte("date", end.toISOString().slice(0, 10))
+    .gte("date", rangeStart)
+    .lte("date", rangeEnd)
     .order("date", { ascending: false })
     .order("created_at", { ascending: false });
 

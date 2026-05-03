@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CalendarRange, Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -11,14 +12,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MoneyValue } from "@/components/ui/money-value";
 import { deleteTransaction } from "@/features/transactions/server/actions";
 import { TransactionFormDialog } from "@/features/transactions/components/transaction-form-dialog";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import { useMobile } from "@/hooks/use-mobile";
 import type { CategoryOption, TransactionListItem, UserProfile } from "@/types/app";
-import { formatDateTime } from "@/utils/format";
+import { formatDate, formatDateTime } from "@/utils/format";
 
 function hexToRgba(hex: string, alpha: number) {
   const normalized = hex.replace("#", "");
@@ -37,18 +41,63 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
+function DateRangeFilterPanel({
+  fromDate,
+  toDate,
+  isPending,
+  onFromDateChange,
+  onToDateChange,
+  onClear,
+  onApply
+}: {
+  fromDate: string;
+  toDate: string;
+  isPending: boolean;
+  onFromDateChange: (value: string) => void;
+  onToDateChange: (value: string) => void;
+  onClear: () => void;
+  onApply: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">From</p>
+          <DatePickerField value={fromDate || undefined} onChange={onFromDateChange} placeholder="Start date" id="transactions-from-date" />
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">To</p>
+          <DatePickerField value={toDate || undefined} onChange={onToDateChange} placeholder="End date" id="transactions-to-date" />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" className="flex-1" onClick={onClear} disabled={isPending || (!fromDate && !toDate)}>
+          Clear
+        </Button>
+        <Button type="button" className="flex-1" onClick={onApply} disabled={isPending || (!fromDate && !toDate)}>
+          Apply range
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function TransactionsClient({
   initialRows,
   summary,
   categories,
   users,
-  initialMonth
+  initialMonth,
+  initialFrom,
+  initialTo
 }: {
   initialRows: TransactionListItem[];
   summary: { income: number; expense: number; net: number };
   categories: CategoryOption[];
   users: UserProfile[];
   initialMonth: string;
+  initialFrom?: string | null;
+  initialTo?: string | null;
 }) {
   const [rows, setRows] = useState(initialRows);
   const [search, setSearch] = useState("");
@@ -57,11 +106,30 @@ export function TransactionsClient({
   const [editing, setEditing] = useState<(TransactionListItem & { categoryId?: string | null }) | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<TransactionListItem | null>(null);
+  const [fromDate, setFromDate] = useState(initialFrom ?? "");
+  const [toDate, setToDate] = useState(initialTo ?? "");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isMobile = useMobile();
 
   useEffect(() => {
     setRows(initialRows);
   }, [initialRows]);
+
+  useEffect(() => {
+    setFromDate(initialFrom ?? "");
+  }, [initialFrom]);
+
+  useEffect(() => {
+    setToDate(initialTo ?? "");
+  }, [initialTo]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, initialRows, fromDate, toDate]);
 
   const filteredRows = useMemo(
     () => rows.filter((row) => `${row.category} ${row.description ?? ""} ${row.userName}`.toLowerCase().includes(search.toLowerCase())),
@@ -72,6 +140,42 @@ export function TransactionsClient({
   const pageSize = 8;
   const paginatedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const hasActiveRange = Boolean(fromDate || toDate);
+
+  const activeRangeLabel = useMemo(() => {
+    if (fromDate && toDate) return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+    if (fromDate) return `From ${formatDate(fromDate)}`;
+    if (toDate) return `Until ${formatDate(toDate)}`;
+    return `Month ${initialMonth}`;
+  }, [fromDate, toDate, initialMonth]);
+
+  const applyDateRange = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (fromDate) {
+      params.set("from", fromDate);
+    } else {
+      params.delete("from");
+    }
+
+    if (toDate) {
+      params.set("to", toDate);
+    } else {
+      params.delete("to");
+    }
+
+    setFilterOpen(false);
+    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+  };
+
+  const clearDateRange = () => {
+    setFromDate("");
+    setToDate("");
+    setFilterOpen(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("from");
+    params.delete("to");
+    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+  };
 
   const exportCsv = async () => {
     const headers = ["Date,User,Type,Category,Description,Amount"];
@@ -82,7 +186,7 @@ export function TransactionsClient({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `budgetly-transactions-${initialMonth}.csv`);
+    link.setAttribute("download", `budgetly-transactions-${fromDate || toDate ? "range" : initialMonth}.csv`);
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -101,6 +205,16 @@ export function TransactionsClient({
     });
   };
 
+  const filterTrigger = (
+    <Button type="button" variant="outline" className="w-full justify-between md:w-auto" onClick={() => setFilterOpen(true)}>
+      <span className="inline-flex items-center gap-2 truncate">
+        <CalendarRange className="h-4 w-4" />
+        <span className="truncate">{hasActiveRange ? activeRangeLabel : "Filter dates"}</span>
+      </span>
+      {hasActiveRange ? <Badge variant="secondary" className="ml-2">Active</Badge> : null}
+    </Button>
+  );
+
   return (
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
@@ -117,11 +231,37 @@ export function TransactionsClient({
 
       <Card className="border-0 bg-transparent shadow-none md:rounded-xl md:border md:bg-card md:shadow-none">
         <CardContent className="px-0 pb-0 pt-0 md:p-6">
-          <div className="mb-6 flex items-center gap-2 md:flex md:justify-between">
-            <div className="relative min-w-0 flex-1 md:w-full md:max-w-sm md:flex-none">
+          <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
+            <div className="relative min-w-0 md:w-full md:max-w-sm">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search transactions" className="pl-10" />
             </div>
+
+            {isMobile ? (
+              filterTrigger
+            ) : (
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  {filterTrigger}
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-[340px] p-4">
+                  <div className="mb-3 space-y-1">
+                    <p className="text-sm font-semibold">Filter by date range</p>
+                    <p className="text-xs text-muted-foreground">Choose a start and end date to narrow the transaction list.</p>
+                  </div>
+                  <DateRangeFilterPanel
+                    fromDate={fromDate}
+                    toDate={toDate}
+                    isPending={isPending}
+                    onFromDateChange={setFromDate}
+                    onToDateChange={setToDate}
+                    onClear={clearDateRange}
+                    onApply={applyDateRange}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
             <div className="flex min-w-0 justify-end gap-2 md:w-auto">
               <Button
                 onClick={() => {
@@ -149,6 +289,16 @@ export function TransactionsClient({
               </Button>
             </div>
           </div>
+
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{activeRangeLabel}</Badge>
+            {hasActiveRange ? (
+              <p className="text-xs text-muted-foreground">Totals and records below are using this selected date range.</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">No custom date range selected, showing the active month.</p>
+            )}
+          </div>
+
           {!paginatedRows.length ? (
             <EmptyState title="No transactions yet" description="Create the first household transaction to start tracking cash flow." actionLabel="Add transaction" onAction={() => setDialogOpen(true)} />
           ) : (
@@ -278,6 +428,27 @@ export function TransactionsClient({
           setPage(1);
         }}
       />
+
+      <Sheet open={isMobile && filterOpen} onOpenChange={setFilterOpen}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Filter by date range</SheetTitle>
+            <SheetDescription>Choose a start and end date to narrow the transaction list.</SheetDescription>
+          </SheetHeader>
+          <div className="p-5">
+            <DateRangeFilterPanel
+              fromDate={fromDate}
+              toDate={toDate}
+              isPending={isPending}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              onClear={clearDateRange}
+              onApply={applyDateRange}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Sheet open={Boolean(selectedRow)} onOpenChange={(open) => !open && setSelectedRow(null)}>
         <SheetContent side="bottom">
           <SheetHeader>

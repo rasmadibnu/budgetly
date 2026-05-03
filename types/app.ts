@@ -82,12 +82,12 @@ export interface DashboardSnapshot {
   budgetRemaining: number;
   savingsProgress: number;
   recentTransactions: TransactionListItem[];
-  expenseSeriesDaily: Array<{ label: string; amount: number }>;
+  expenseSeriesDaily: Array<{ label: string; amount: number; dateKey?: string }>;
   expenseSeriesMonthly: Array<{ label: string; amount: number }>;
   incomeExpenseSeriesDaily: Array<{ label: string; income: number; expense: number }>;
   incomeExpenseSeriesMonthly: Array<{ label: string; income: number; expense: number }>;
   dailyCashCalendar: DailyCashCalendarEntry[];
-  categoryDistribution: Array<{ name: string; value: number }>;
+  categoryDistribution: Array<{ name: string; value: number; color?: string }>;
   budgetHighlights: BudgetUsageItem[];
   activeGoals: GoalCardData[];
 }
