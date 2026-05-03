@@ -7,17 +7,20 @@ import { BudgetUsageCard } from "@/features/dashboard/components/budget-usage-ca
 import { GoalsProgressCard } from "@/features/dashboard/components/goals-progress-card";
 import { DailyCashCalendar } from "@/features/dashboard/components/daily-cash-calendar";
 import type { DashboardSnapshot } from "@/types/app";
+import type { CategoryReportGroup } from "@/types/database";
 import { formatPercentage } from "@/utils/format";
 import { PageHeader } from "@/components/layout/page-header";
 import { MoneyValue } from "@/components/ui/money-value";
+import { DashboardGroupFilter } from "@/features/dashboard/components/dashboard-group-filter";
 
-export function DashboardView({ snapshot }: { snapshot: DashboardSnapshot }) {
+export function DashboardView({ snapshot, reportGroup }: { snapshot: DashboardSnapshot; reportGroup?: CategoryReportGroup }) {
   return (
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Overview"
         title="📊 Dashboard"
         description="Your household finances at a glance."
+        actions={<DashboardGroupFilter value={reportGroup} />}
       />
       <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard title="Total balance" value={<><MoneyValue value={snapshot.totalBalance} compact className="sm:hidden" /><MoneyValue value={snapshot.totalBalance} className="hidden sm:inline" /></>} caption="Combined running balance" compact />

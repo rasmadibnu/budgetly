@@ -38,7 +38,7 @@ function formatWeekdayLabel(value: string) {
   }).format(new Date(`${value}T00:00:00+07:00`));
 }
 
-export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promise<DashboardSnapshot> {
+export async function getDashboardSnapshot(month = getCurrentMonthKey(), reportGroup?: CategoryReportGroup): Promise<DashboardSnapshot> {
   const { householdId } = await getHouseholdContext();
   const supabase = await createSupabaseServerClient();
 
@@ -69,13 +69,16 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   const usersById = new Map(
     usersResponse.map((profile) => [profile.id, formatUsername(profile.username)])
   );
+  const getTransactionReportGroup = (categoryId: string | null) =>
+    (categoriesById.get(categoryId ?? "")?.report_group ?? "secondary") as CategoryReportGroup;
+  const matchesReportGroup = (categoryId: string | null) => !reportGroup || getTransactionReportGroup(categoryId) === reportGroup;
 
   const currentMonthTransactions = transactionsResponse.data.filter((transaction) => transaction.date.startsWith(month));
   const monthlyIncome = currentMonthTransactions
     .filter((transaction) => transaction.type === "income")
     .reduce((sum, transaction) => sum + transaction.amount, 0);
   const monthlyExpense = currentMonthTransactions
-    .filter((transaction) => transaction.type === "expense")
+    .filter((transaction) => transaction.type === "expense" && matchesReportGroup(transaction.category_id))
     .reduce((sum, transaction) => sum + transaction.amount, 0);
   const totalBalance = transactionsResponse.data.reduce(
     (sum, transaction) => sum + (transaction.type === "income" ? transaction.amount : -transaction.amount),
@@ -115,10 +118,11 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     const dailyExpenseValue = expenseSeriesDailyMap.get(transaction.date) ?? 0;
 
     if (transaction.type === "expense") {
+      if (!matchesReportGroup(transaction.category_id)) return;
+
       expenseSeriesMonthlyMap.set(monthKey, monthlyExpenseValue + transaction.amount);
       monthlyIncomeExpense.expense += transaction.amount;
-      const category = categoriesById.get(transaction.category_id ?? "");
-      const categoryGroup = (category?.report_group ?? "secondary") as CategoryReportGroup;
+      const categoryGroup = getTransactionReportGroup(transaction.category_id);
       const groupName = CATEGORY_REPORT_GROUP_LABELS[categoryGroup];
       categoryDistributionMap.set(groupName, (categoryDistributionMap.get(groupName) ?? 0) + transaction.amount);
 
@@ -141,8 +145,9 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     }
   });
 
-  const budgetRemaining = budgetsResponse.data.reduce((sum, budget) => sum + budget.remaining_amount, 0);
-  const budgetHighlights = budgetsResponse.data
+  const filteredBudgets = budgetsResponse.data.filter((budget) => matchesReportGroup(budget.category_id));
+  const budgetRemaining = filteredBudgets.reduce((sum, budget) => sum + budget.remaining_amount, 0);
+  const budgetHighlights = filteredBudgets
     .map((budget) => ({
       id: budget.budget_id,
       categoryId: budget.category_id,
@@ -178,7 +183,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     monthlyExpense,
     budgetRemaining,
     savingsProgress,
-    recentTransactions: transactionsResponse.data.slice(0, 5).map((transaction) => ({
+    recentTransactions: transactionsResponse.data
+      .filter((transaction) => !reportGroup || (transaction.type === "expense" && matchesReportGroup(transaction.category_id)))
+      .slice(0, 5)
+      .map((transaction) => ({
       id: transaction.id,
       userName: usersById.get(transaction.user_id) ?? "Member",
       type: transaction.type,
