@@ -86,10 +86,20 @@ export interface DashboardSnapshot {
   expenseSeriesMonthly: Array<{ label: string; amount: number }>;
   incomeExpenseSeriesDaily: Array<{ label: string; income: number; expense: number }>;
   incomeExpenseSeriesMonthly: Array<{ label: string; income: number; expense: number }>;
+  monthlyCategoryReport: MonthlyCategoryReportRow[];
   dailyCashCalendar: DailyCashCalendarEntry[];
   categoryDistribution: Array<{ name: string; value: number; color?: string }>;
   budgetHighlights: BudgetUsageItem[];
   activeGoals: GoalCardData[];
+}
+
+export interface MonthlyCategoryReportRow {
+  month: string;
+  income: number;
+  primary: number;
+  secondary: number;
+  tersier: number;
+  sum: number;
 }
 
 export interface DailyCashCalendarEntry {

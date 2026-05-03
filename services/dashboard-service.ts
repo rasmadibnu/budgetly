@@ -28,6 +28,22 @@ function formatMonthLabel(value: string) {
   }).format(new Date(`${value}-01T00:00:00+07:00`));
 }
 
+function formatShortMonthLabel(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    month: "short",
+  }).format(new Date(`${value}-01T00:00:00+07:00`));
+}
+
+function getRecentMonthKeys(month: string) {
+  const [year, monthNumber] = month.split("-").map(Number);
+
+  return Array.from({ length: 3 }, (_, index) => {
+    const date = new Date(year, monthNumber - 3 + index, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  });
+}
+
 function formatDayLabel(value: string) {
   return new Intl.DateTimeFormat("id-ID", {
     timeZone: "Asia/Jakarta",
@@ -99,6 +115,20 @@ export async function getDashboardSnapshot(
       "secondary") as CategoryReportGroup;
   const matchesReportGroup = (categoryId: string | null) =>
     !reportGroup || getTransactionReportGroup(categoryId) === reportGroup;
+  const recentMonthKeys = getRecentMonthKeys(month);
+  const monthlyCategoryReportMap = new Map(
+    recentMonthKeys.map((monthKey) => [
+      monthKey,
+      {
+        month: formatShortMonthLabel(monthKey),
+        income: 0,
+        primary: 0,
+        secondary: 0,
+        tersier: 0,
+        sum: 0,
+      },
+    ]),
+  );
 
   const currentMonthTransactions = transactionsResponse.data.filter(
     (transaction) => transaction.date.startsWith(month),
@@ -161,6 +191,7 @@ export async function getDashboardSnapshot(
 
   transactionsResponse.data.forEach((transaction) => {
     const monthKey = transaction.date.slice(0, 7);
+    const reportRow = monthlyCategoryReportMap.get(monthKey);
     const monthlyExpenseValue = expenseSeriesMonthlyMap.get(monthKey) ?? 0;
     const monthlyIncomeExpense = incomeExpenseMonthlyMap.get(monthKey) ?? {
       income: 0,
@@ -173,6 +204,12 @@ export async function getDashboardSnapshot(
     const dailyExpenseValue = expenseSeriesDailyMap.get(transaction.date) ?? 0;
 
     if (transaction.type === "expense") {
+      if (reportRow) {
+        const group = getTransactionReportGroup(transaction.category_id);
+        reportRow[group] += transaction.amount;
+        reportRow.sum += transaction.amount;
+      }
+
       if (!matchesReportGroup(transaction.category_id)) return;
 
       expenseSeriesMonthlyMap.set(
@@ -206,6 +243,10 @@ export async function getDashboardSnapshot(
         dailyIncomeExpense.expense += transaction.amount;
       }
     } else {
+      if (reportRow) {
+        reportRow.income += transaction.amount;
+      }
+
       monthlyIncomeExpense.income += transaction.amount;
 
       if (transaction.date.startsWith(month)) {
@@ -295,6 +336,7 @@ export async function getDashboardSnapshot(
     expenseSeriesDaily: dailyCashCalendar.map((entry) => ({
       label: entry.dayLabel,
       amount: entry.expense,
+      dateKey: entry.date,
     })),
     expenseSeriesMonthly: Array.from(expenseSeriesMonthlyMap.entries())
       .sort(([left], [right]) => left.localeCompare(right))
@@ -314,6 +356,17 @@ export async function getDashboardSnapshot(
         income: values.income,
         expense: values.expense,
       })),
+    monthlyCategoryReport: recentMonthKeys.map((monthKey) => {
+      const row = monthlyCategoryReportMap.get(monthKey);
+      return row ?? {
+        month: formatShortMonthLabel(monthKey),
+        income: 0,
+        primary: 0,
+        secondary: 0,
+        tersier: 0,
+        sum: 0,
+      };
+    }),
     dailyCashCalendar,
     categoryDistribution: reportGroup
       ? Array.from(categoryDistributionMap.values()).sort(

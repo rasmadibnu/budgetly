@@ -333,7 +333,8 @@ export function TransactionsClient({
                         </Badge>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-xs text-muted-foreground">{formatDateTime(row.createdAt)}</p>
+                        <p className="text-xs text-muted-foreground">Created {formatDateTime(row.createdAt)}</p>
+                        <p className="text-xs text-muted-foreground">Date {formatDate(row.date)}</p>
                         <span className={row.type === "income" ? "mt-1 inline-block font-semibold text-success" : "mt-1 inline-block font-semibold text-rose-600"}>
                           {row.type === "income" ? "+ " : "- "}
                           <MoneyValue value={row.amount} />
@@ -348,7 +349,8 @@ export function TransactionsClient({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Created at</TableHead>
+                      <TableHead>Transaction date</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
@@ -360,6 +362,7 @@ export function TransactionsClient({
                     {paginatedRows.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>{formatDateTime(row.createdAt)}</TableCell>
+                        <TableCell>{formatDate(row.date)}</TableCell>
                         <TableCell>{row.userName}</TableCell>
                         <TableCell>
                           <Badge
@@ -467,7 +470,10 @@ export function TransactionsClient({
                   </div>
                   <MoneyValue value={selectedRow.amount} className={selectedRow.type === "income" ? "font-semibold text-success" : "font-semibold"} />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{formatDateTime(selectedRow.createdAt)}</p>
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>Created {formatDateTime(selectedRow.createdAt)}</p>
+                  <p>Date {formatDate(selectedRow.date)}</p>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button

@@ -9,13 +9,54 @@ import { formatCompactCurrency } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import { MoneyValue } from "@/components/ui/money-value";
 import { useMobile } from "@/hooks/use-mobile";
+import type { MonthlyCategoryReportRow } from "@/types/app";
+
+function formatReportValue(value: number) {
+  return value > 0 ? formatCompactCurrency(value) : "";
+}
+
+function MonthlyCategoryReportTable({ rows }: { rows: MonthlyCategoryReportRow[] }) {
+  return (
+    <div className="mb-4 overflow-x-auto">
+      <table className="w-full min-w-[560px] border-collapse text-xs">
+        <thead>
+          <tr className="bg-muted/25">
+            <th className="border border-border px-3 py-2 text-left font-semibold" rowSpan={2}>Month</th>
+            <th className="border border-border px-3 py-2 text-right font-semibold" rowSpan={2}>Income</th>
+            <th className="border border-border px-3 py-2 text-center font-semibold" colSpan={4}>Expense</th>
+          </tr>
+          <tr className="bg-muted/25">
+            <th className="border border-border px-3 py-2 text-right font-medium">Primary</th>
+            <th className="border border-border px-3 py-2 text-right font-medium">Secondary</th>
+            <th className="border border-border px-3 py-2 text-right font-medium">Tersier</th>
+            <th className="border border-border px-3 py-2 text-right font-medium">Sum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.month}>
+              <td className="border border-border px-3 py-2 font-medium">{row.month}</td>
+              <td className="border border-border px-3 py-2 text-right">{formatReportValue(row.income)}</td>
+              <td className="border border-border px-3 py-2 text-right">{formatReportValue(row.primary)}</td>
+              <td className="border border-border px-3 py-2 text-right">{formatReportValue(row.secondary)}</td>
+              <td className="border border-border px-3 py-2 text-right">{formatReportValue(row.tersier)}</td>
+              <td className="border border-border px-3 py-2 text-right font-medium">{formatReportValue(row.sum)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function ExpenseChart({
   dailyData,
-  monthlyData
+  monthlyData,
+  monthlyReport
 }: {
   dailyData: Array<{ label: string; amount: number; dateKey?: string }>;
   monthlyData: Array<{ label: string; amount: number }>;
+  monthlyReport: MonthlyCategoryReportRow[];
 }) {
   const [view, setView] = useState<"daily" | "monthly">("daily");
   const router = useRouter();
@@ -39,6 +80,7 @@ export function ExpenseChart({
 
   return (
     <ChartShell title={view === "daily" ? "Daily expenses" : "Monthly expenses"} description={view === "daily" ? "Track expense movement day by day this month." : "Track expense movement month by month."}>
+      <MonthlyCategoryReportTable rows={monthlyReport} />
       <div className="mb-4 flex gap-2">
         <Button type="button" size="sm" variant={view === "daily" ? "default" : "outline"} onClick={() => setView("daily")}>Daily</Button>
         <Button type="button" size="sm" variant={view === "monthly" ? "default" : "outline"} onClick={() => setView("monthly")}>Monthly</Button>
@@ -62,7 +104,7 @@ export function ExpenseChart({
               <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
               <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]} cursor={view === "daily" ? "pointer" : "default"}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`mobile-expense-${entry.label}-${index}`} fill={view === "daily" && "clickable" in entry && entry.clickable ? "hsl(var(--danger))" : "hsl(var(--danger) / 0.4)"} />
+                  <Cell key={`mobile-expense-${entry.label}-${index}`} fill={entry.amount > 0 ? "hsl(var(--danger))" : "hsl(var(--danger) / 0.25)"} />
                 ))}
                 {view === "daily" ? (
                   <LabelList dataKey="amount" position="top" offset={8} formatter={(value: number) => formatCompactCurrency(value)} className="fill-foreground text-[11px] font-semibold" />
@@ -78,7 +120,7 @@ export function ExpenseChart({
               <Tooltip formatter={(value: number) => formatCompactCurrency(value)} />
               <Bar dataKey="amount" fill="hsl(var(--danger))" radius={[12, 12, 0, 0]} cursor={view === "daily" ? "pointer" : "default"}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`desktop-expense-${entry.label}-${index}`} fill={view === "daily" && "clickable" in entry && entry.clickable ? "hsl(var(--danger))" : "hsl(var(--danger) / 0.4)"} />
+                  <Cell key={`desktop-expense-${entry.label}-${index}`} fill={entry.amount > 0 ? "hsl(var(--danger))" : "hsl(var(--danger) / 0.25)"} />
                 ))}
               </Bar>
             </BarChart>
