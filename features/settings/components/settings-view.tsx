@@ -23,6 +23,7 @@ import { deleteCategory, upsertCategory } from "@/features/categories/server/act
 import { categorySchema, type CategoryInput } from "@/features/categories/schemas/category-schema";
 import { exportBackupAction, generateMonthlyReportAction } from "@/features/settings/server/actions";
 import type { CategoryOption, UserProfile } from "@/types/app";
+import type { CategoryReportGroup } from "@/types/database";
 import { cn } from "@/utils/cn";
 
 const CATEGORY_COLOR_PRESETS = [
@@ -44,6 +45,16 @@ const CATEGORY_COLOR_PRESETS = [
   { name: "Pink", value: "#ec4899", className: "bg-pink-500" }
 ] as const;
 
+const CATEGORY_REPORT_GROUPS: Array<{ value: CategoryReportGroup; label: string }> = [
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+  { value: "tersier", label: "Tersier" }
+];
+
+function getCategoryReportGroupLabel(value: CategoryReportGroup) {
+  return CATEGORY_REPORT_GROUPS.find((item) => item.value === value)?.label ?? "Secondary";
+}
+
 export function SettingsView({ user, categories }: { user: UserProfile; categories: CategoryOption[] }) {
   const [localCategories, setLocalCategories] = useState(categories);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,7 +68,8 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
     defaultValues: {
       name: "",
       type: "expense",
-      color: "#0f766e"
+      color: "#0f766e",
+      reportGroup: "secondary"
     }
   });
 
@@ -68,6 +80,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       name: "",
       type: "expense",
       color: "#0f766e",
+      reportGroup: "secondary",
       icon: undefined
     });
   };
@@ -82,7 +95,8 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       id: optimisticId,
       name: values.name,
       type: values.type,
-      color: values.color
+      color: values.color,
+      reportGroup: values.reportGroup
     };
     const previous = localCategories;
     setLocalCategories((current) =>
@@ -109,6 +123,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       name: category.name,
       type: category.type,
       color: category.color,
+      reportGroup: category.reportGroup,
       icon: undefined
     });
   };
@@ -136,6 +151,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
       name: "",
       type: "expense",
       color: "#0f766e",
+      reportGroup: "secondary",
       icon: undefined
     });
     setCategoryDialogOpen(true);
@@ -234,6 +250,9 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                       </div>
                       <Badge variant="outline">{category.type}</Badge>
                     </div>
+                    <div className="mt-3">
+                      <Badge variant="secondary">{getCategoryReportGroupLabel(category.reportGroup)}</Badge>
+                    </div>
                     <div className="mt-3 flex items-center gap-2">
                       <span className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: category.color }} />
                       <span className="font-mono text-xs text-muted-foreground">{category.color}</span>
@@ -252,6 +271,7 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Sub category</TableHead>
                       <TableHead>Color</TableHead>
                       <TableHead className="w-[180px] text-right">Actions</TableHead>
                     </TableRow>
@@ -270,6 +290,9 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{category.type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{getCategoryReportGroupLabel(category.reportGroup)}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -313,7 +336,9 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: selectedCategory.color }} />
                   <div>
                     <p className="text-sm font-medium">{selectedCategory.name}</p>
-                    <p className="text-xs text-muted-foreground">{selectedCategory.type}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedCategory.type} · {getCategoryReportGroupLabel(selectedCategory.reportGroup)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -352,6 +377,24 @@ export function SettingsView({ user, categories }: { user: UserProfile; categori
                 <SelectContent>
                   <SelectItem value="income">Income</SelectItem>
                   <SelectItem value="expense">Expense</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Sub category</Label>
+              <Select
+                value={form.watch("reportGroup")}
+                onValueChange={(value) => form.setValue("reportGroup", value as CategoryReportGroup, { shouldDirty: true, shouldValidate: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sub category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_REPORT_GROUPS.map((group) => (
+                    <SelectItem key={group.value} value={group.value}>
+                      {group.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

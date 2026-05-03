@@ -32,7 +32,8 @@ export function CategoryQuickCreateDialog({
     defaultValues: {
       name: "",
       type,
-      color: type === "income" ? "#22c55e" : "#0ea5e9"
+      color: type === "income" ? "#22c55e" : "#0ea5e9",
+      reportGroup: "secondary"
     }
   });
 
@@ -41,7 +42,8 @@ export function CategoryQuickCreateDialog({
       form.reset({
         name: "",
         type,
-        color: type === "income" ? "#22c55e" : "#0ea5e9"
+        color: type === "income" ? "#22c55e" : "#0ea5e9",
+        reportGroup: "secondary"
       });
     }
   }, [form, open, type]);

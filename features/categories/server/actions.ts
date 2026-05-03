@@ -18,9 +18,10 @@ export async function upsertCategory(input: CategoryInput) {
       name: parsed.name,
       type: parsed.type,
       color: parsed.color,
+      report_group: parsed.reportGroup,
       icon: parsed.icon ?? null
     })
-    .select("id, name, type, color")
+    .select("id, name, type, color, report_group")
     .single();
 
   if (error) throw error;
@@ -28,7 +29,14 @@ export async function upsertCategory(input: CategoryInput) {
   revalidatePath("/transactions");
   revalidatePath("/budgets");
   revalidatePath("/subscriptions");
-  return data;
+  revalidatePath("/reports");
+  return {
+    id: data.id,
+    name: data.name,
+    type: data.type,
+    color: data.color,
+    reportGroup: data.report_group
+  };
 }
 
 export async function deleteCategory(id: string) {

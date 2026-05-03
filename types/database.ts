@@ -9,6 +9,7 @@ export type DebtDirection = "debt" | "receivable";
 export type DebtStatus = "open" | "settled";
 export type InvestmentStatus = "active" | "closed";
 export type SubscriptionStatus = "active" | "paused" | "cancelled";
+export type CategoryReportGroup = "primary" | "secondary" | "tersier";
 
 export interface Database {
   public: {
@@ -78,6 +79,7 @@ export interface Database {
           color: string;
           icon: string | null;
           is_system: boolean;
+          report_group: CategoryReportGroup;
           created_at: string;
         };
         Insert: {
@@ -88,6 +90,7 @@ export interface Database {
           color?: string;
           icon?: string | null;
           is_system?: boolean;
+          report_group?: CategoryReportGroup;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["transaction_categories"]["Insert"]>;
@@ -404,6 +407,7 @@ export interface Database {
       goal_status: GoalStatus;
       recurrence_type: Recurrence;
       invoice_status: InvoiceStatus;
+      category_report_group: CategoryReportGroup;
     };
     CompositeTypes: Record<string, never>;
   };

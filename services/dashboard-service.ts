@@ -1,8 +1,16 @@
 import { getCurrentMonthKey } from "@/utils/date";
 import type { DashboardSnapshot } from "@/types/app";
+import type { CategoryReportGroup } from "@/types/database";
 import { getHouseholdContext } from "@/services/household-service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdUsers } from "@/services/user-service";
+
+const CATEGORY_REPORT_GROUP_LABELS: Record<CategoryReportGroup, string> = {
+  primary: "Primary",
+  secondary: "Secondary",
+  tersier: "Tersier"
+};
+const CATEGORY_REPORT_GROUP_ORDER: CategoryReportGroup[] = ["primary", "secondary", "tersier"];
 
 function formatUsername(value: string) {
   return value.replace(/\b\w/g, (char: string) => char.toUpperCase());
@@ -47,7 +55,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       .eq("household_id", householdId)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false }),
-    supabase.from("transaction_categories").select("id, name").eq("household_id", householdId),
+    supabase.from("transaction_categories").select("id, name, report_group").eq("household_id", householdId),
     supabase.from("goals").select("*").eq("household_id", householdId).order("target_date", { ascending: true }),
     supabase.from("budget_usage").select("*").eq("household_id", householdId).eq("month", month),
     getHouseholdUsers()
@@ -57,7 +65,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
   if (categoriesResponse.error) throw categoriesResponse.error;
   if (goalsResponse.error) throw goalsResponse.error;
   if (budgetsResponse.error) throw budgetsResponse.error;
-  const categoriesById = new Map(categoriesResponse.data.map((category) => [category.id, category.name]));
+  const categoriesById = new Map(categoriesResponse.data.map((category) => [category.id, category]));
   const usersById = new Map(
     usersResponse.map((profile) => [profile.id, formatUsername(profile.username)])
   );
@@ -109,8 +117,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     if (transaction.type === "expense") {
       expenseSeriesMonthlyMap.set(monthKey, monthlyExpenseValue + transaction.amount);
       monthlyIncomeExpense.expense += transaction.amount;
-      const categoryName = categoriesById.get(transaction.category_id ?? "") ?? "Uncategorized";
-      categoryDistributionMap.set(categoryName, (categoryDistributionMap.get(categoryName) ?? 0) + transaction.amount);
+      const category = categoriesById.get(transaction.category_id ?? "");
+      const categoryGroup = (category?.report_group ?? "secondary") as CategoryReportGroup;
+      const groupName = CATEGORY_REPORT_GROUP_LABELS[categoryGroup];
+      categoryDistributionMap.set(groupName, (categoryDistributionMap.get(groupName) ?? 0) + transaction.amount);
 
       if (transaction.date.startsWith(month)) {
         expenseSeriesDailyMap.set(transaction.date, dailyExpenseValue + transaction.amount);
@@ -136,7 +146,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
     .map((budget) => ({
       id: budget.budget_id,
       categoryId: budget.category_id,
-      category: categoriesById.get(budget.category_id) ?? "Uncategorized",
+      category: categoriesById.get(budget.category_id)?.name ?? "Uncategorized",
       month: budget.month,
       amount: budget.budget_amount,
       spent: budget.spent_amount,
@@ -174,7 +184,7 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
       type: transaction.type,
       amount: transaction.amount,
       categoryId: transaction.category_id,
-      category: categoriesById.get(transaction.category_id ?? "") ?? "Uncategorized",
+      category: categoriesById.get(transaction.category_id ?? "")?.name ?? "Uncategorized",
       description: transaction.description,
       date: transaction.date,
       createdAt: transaction.created_at,
@@ -198,7 +208,10 @@ export async function getDashboardSnapshot(month = getCurrentMonthKey()): Promis
         expense: values.expense
       })),
     dailyCashCalendar,
-    categoryDistribution: Array.from(categoryDistributionMap.entries()).map(([name, value]) => ({ name, value })),
+    categoryDistribution: CATEGORY_REPORT_GROUP_ORDER.map((group) => {
+      const name = CATEGORY_REPORT_GROUP_LABELS[group];
+      return { name, value: categoryDistributionMap.get(name) ?? 0 };
+    }).filter((item) => item.value > 0),
     budgetHighlights,
     activeGoals: activeGoals.slice(0, 4)
   };

@@ -5,6 +5,7 @@ export const categorySchema = z.object({
   name: z.string().min(2).max(50),
   type: z.enum(["income", "expense"]),
   color: z.string().min(4).max(20),
+  reportGroup: z.enum(["primary", "secondary", "tersier"]).default("secondary"),
   icon: z.string().nullable().optional()
 });
 

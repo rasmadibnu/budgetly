@@ -21,7 +21,7 @@ export default async function TransactionsPage({
     <TransactionsClient
       initialRows={rows}
       summary={summary}
-      categories={categories.map((category) => ({ id: category.id, name: category.name, type: category.type, color: category.color }))}
+      categories={categories}
       users={users}
       initialMonth={month}
     />

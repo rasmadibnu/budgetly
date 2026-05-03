@@ -6,6 +6,7 @@ import type {
   InvoiceStatus,
   Recurrence,
   Role,
+  CategoryReportGroup,
   SubscriptionStatus,
   TransactionType
 } from "@/types/database";
@@ -22,6 +23,7 @@ export interface CategoryOption {
   name: string;
   type: TransactionType;
   color: string;
+  reportGroup: CategoryReportGroup;
 }
 
 export interface TransactionListItem {

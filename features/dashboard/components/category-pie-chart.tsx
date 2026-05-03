@@ -15,7 +15,7 @@ const COLORS = [
 
 export function CategoryPieChart({ data }: { data: Array<{ name: string; value: number }> }) {
   return (
-    <ChartShell title="Category distribution" description="See where household spending concentrates.">
+    <ChartShell title="Sub category distribution" description="See spending grouped by Primary, Secondary, and Tersier.">
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
