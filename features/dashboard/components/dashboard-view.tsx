@@ -35,7 +35,7 @@ export function DashboardView({ snapshot, reportGroup }: { snapshot: DashboardSn
         <div className="min-w-0 xl:col-span-2">
           <ExpenseChart dailyData={snapshot.expenseSeriesDaily} monthlyData={snapshot.expenseSeriesMonthly} />
         </div>
-        <CategoryPieChart data={snapshot.categoryDistribution} />
+        <CategoryPieChart data={snapshot.categoryDistribution} filtered={Boolean(reportGroup)} />
       </div>
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="min-w-0 xl:col-span-2">

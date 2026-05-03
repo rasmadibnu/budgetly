@@ -16,9 +16,18 @@ const FALLBACK_COLORS = [
   "#ec4899"
 ];
 
-export function CategoryPieChart({ data }: { data: Array<{ name: string; value: number; color?: string }> }) {
+export function CategoryPieChart({
+  data,
+  filtered
+}: {
+  data: Array<{ name: string; value: number; color?: string }>;
+  filtered?: boolean;
+}) {
   return (
-    <ChartShell title="Sub category distribution" description="See spending grouped by Primary, Secondary, and Tersier.">
+    <ChartShell
+      title={filtered ? "Category distribution" : "Sub category distribution"}
+      description={filtered ? "See spending by category inside the selected sub category." : "See spending grouped by Primary, Secondary, and Tersier."}
+    >
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>

@@ -66,7 +66,7 @@ export async function getDashboardSnapshot(
       .order("created_at", { ascending: false }),
     supabase
       .from("transaction_categories")
-      .select("id, name, report_group")
+      .select("id, name, color, report_group")
       .eq("household_id", householdId),
     supabase
       .from("goals")
@@ -154,7 +154,10 @@ export async function getDashboardSnapshot(
     string,
     { income: number; expense: number }
   >();
-  const categoryDistributionMap = new Map<string, number>();
+  const categoryDistributionMap = new Map<
+    string,
+    { name: string; value: number; color?: string }
+  >();
 
   transactionsResponse.data.forEach((transaction) => {
     const monthKey = transaction.date.slice(0, 7);
@@ -177,12 +180,23 @@ export async function getDashboardSnapshot(
         monthlyExpenseValue + transaction.amount,
       );
       monthlyIncomeExpense.expense += transaction.amount;
+      const category = categoriesById.get(transaction.category_id ?? "");
       const categoryGroup = getTransactionReportGroup(transaction.category_id);
-      const groupName = CATEGORY_REPORT_GROUP_LABELS[categoryGroup];
-      categoryDistributionMap.set(
-        groupName,
-        (categoryDistributionMap.get(groupName) ?? 0) + transaction.amount,
-      );
+      const distributionKey = reportGroup
+        ? transaction.category_id ?? "uncategorized"
+        : categoryGroup;
+      const distributionName = reportGroup
+        ? category?.name ?? "Uncategorized"
+        : CATEGORY_REPORT_GROUP_LABELS[categoryGroup];
+      const currentDistribution = categoryDistributionMap.get(
+        distributionKey,
+      ) ?? {
+        name: distributionName,
+        value: 0,
+        color: reportGroup ? category?.color : undefined,
+      };
+      currentDistribution.value += transaction.amount;
+      categoryDistributionMap.set(distributionKey, currentDistribution);
 
       if (transaction.date.startsWith(month)) {
         expenseSeriesDailyMap.set(
@@ -301,10 +315,17 @@ export async function getDashboardSnapshot(
         expense: values.expense,
       })),
     dailyCashCalendar,
-    categoryDistribution: CATEGORY_REPORT_GROUP_ORDER.map((group) => {
-      const name = CATEGORY_REPORT_GROUP_LABELS[group];
-      return { name, value: categoryDistributionMap.get(name) ?? 0 };
-    }).filter((item) => item.value > 0),
+    categoryDistribution: reportGroup
+      ? Array.from(categoryDistributionMap.values()).sort(
+          (first, second) => second.value - first.value,
+        )
+      : CATEGORY_REPORT_GROUP_ORDER.map((group) => {
+          const item = categoryDistributionMap.get(group);
+          return {
+            name: CATEGORY_REPORT_GROUP_LABELS[group],
+            value: item?.value ?? 0,
+          };
+        }).filter((item) => item.value > 0),
     budgetHighlights,
     activeGoals: activeGoals.slice(0, 4),
   };
